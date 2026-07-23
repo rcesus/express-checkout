@@ -27,16 +27,18 @@ export default function Home() {
   const [hasPrivateToken, setHasPrivateToken] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
-  // Payabli requires autopay.startDate to be at least 1 day in the future,
-  // so tomorrow is the earliest selectable start date.
-  const minStartDate = useMemo(() => addDays(isoDate(new Date()), 1), []);
+  // The component's own validator parses a date-only startDate ("2026-07-24") as
+  // UTC midnight, but builds its "at least tomorrow" floor in local time. West of
+  // UTC (US timezones) that makes today+1 land a few hours below the floor and get
+  // rejected, so the floor is today+2, which clears the check.
+  const minStartDate = useMemo(() => addDays(isoDate(new Date()), 2), []);
 
   const [amount, setAmount] = useState("");
   const [frequency, setFrequency] = useState<Frequency>(persona.defaultFrequency);
-  const [startDate, setStartDate] = useState(() => addDays(isoDate(new Date()), 1));
+  const [startDate, setStartDate] = useState(() => addDays(isoDate(new Date()), 2));
   const [endMode, setEndMode] = useState<EndMode>(persona.defaultEndMode);
   const [endDate, setEndDate] = useState(() =>
-    addMonths(addDays(isoDate(new Date()), 1), persona.defaultEndOffsetMonths ?? 6),
+    addMonths(addDays(isoDate(new Date()), 2), persona.defaultEndOffsetMonths ?? 6),
   );
 
   const [scriptLoaded, setScriptLoaded] = useState(false);
@@ -48,7 +50,7 @@ export default function Home() {
   // Load saved paypoint settings and private-token status once.
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(SETTINGS_KEY);
+      const raw = sessionStorage.getItem(SETTINGS_KEY);
       if (raw) setSettings(JSON.parse(raw));
     } catch {
       // ignore malformed storage
@@ -187,7 +189,7 @@ export default function Home() {
     setSettings(next);
     setHasPrivateToken(privateTokenSaved);
     try {
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
+      sessionStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
     } catch {
       // ignore storage failures
     }
