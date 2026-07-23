@@ -246,6 +246,7 @@ input[readonly] {
 
 .pay-container {
   min-height: 60px;
+  background: var(--panel);
 }
 
 .modal-backdrop {

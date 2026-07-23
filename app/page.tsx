@@ -90,6 +90,9 @@ export default function Home() {
       rootContainer: CONTAINER_ID,
       token: settings.publicToken,
       entryPoint: settings.entryPoint,
+      // Custom stylesheet applied inside the checkout iframe. Absolute URL so
+      // the iframe can fetch it on whatever domain this deploys to.
+      customCssUrl: `${window.location.origin}/express-checkout.css`,
       expressCheckout: {
         mode: "autopay",
         amount: amountValue,
@@ -240,14 +243,18 @@ export default function Home() {
           <label>
             Amount
             <input
-              type="number"
+              type="text"
               inputMode="decimal"
-              min="0"
-              step="0.01"
               value={amount}
               placeholder={persona.amount.toFixed(2)}
               onChange={(e) => {
-                setAmount(e.target.value);
+                // Keep digits and a single decimal point, and cap cents at two
+                // digits, so the field can't collect unlimited decimals.
+                const [whole, ...rest] = e.target.value
+                  .replace(/[^\d.]/g, "")
+                  .split(".");
+                const cents = rest.join("").slice(0, 2);
+                setAmount(rest.length ? `${whole}.${cents}` : whole);
                 markStale();
               }}
             />
