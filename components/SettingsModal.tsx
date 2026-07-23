@@ -7,6 +7,7 @@ import {
   GOOGLE_PAY_BUTTON_STYLES,
   SUPPORTED_NETWORKS,
   COLUMN_OPTIONS,
+  DEFAULT_CHECKOUT,
   type CheckoutConfig,
 } from "@/lib/checkout-options";
 
@@ -46,6 +47,15 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
 
   function patch(next: Partial<CheckoutConfig>) {
     setCheckout((c) => ({ ...c, ...next }));
+  }
+
+  function resetSizes() {
+    patch({
+      buttonHeight: DEFAULT_CHECKOUT.buttonHeight,
+      buttonBorderRadius: DEFAULT_CHECKOUT.buttonBorderRadius,
+      paddingX: DEFAULT_CHECKOUT.paddingX,
+      paddingY: DEFAULT_CHECKOUT.paddingY,
+    });
   }
 
   function toggleNetwork(value: string) {
@@ -207,42 +217,53 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
 
         <fieldset className="end-mode">
           <legend>Button size (Apple Pay and Google Pay)</legend>
-          <label>
-            Height (px)
+          <label className="slider">
+            <span className="slider-label">Height</span>
             <input
-              type="number"
-              min={0}
+              type="range"
+              min={30}
+              max={70}
               value={checkout.buttonHeight}
               onChange={(e) => patch({ buttonHeight: Number(e.target.value) })}
             />
+            <span className="slider-value">{checkout.buttonHeight}px</span>
           </label>
-          <label>
-            Corner radius (px)
+          <label className="slider">
+            <span className="slider-label">Corner radius</span>
             <input
-              type="number"
+              type="range"
               min={0}
+              max={30}
               value={checkout.buttonBorderRadius}
               onChange={(e) => patch({ buttonBorderRadius: Number(e.target.value) })}
             />
+            <span className="slider-value">{checkout.buttonBorderRadius}px</span>
           </label>
-          <label>
-            Horizontal padding (px)
+          <label className="slider">
+            <span className="slider-label">Horizontal padding</span>
             <input
-              type="number"
+              type="range"
               min={0}
+              max={40}
               value={checkout.paddingX}
               onChange={(e) => patch({ paddingX: Number(e.target.value) })}
             />
+            <span className="slider-value">{checkout.paddingX}px</span>
           </label>
-          <label>
-            Vertical padding (px)
+          <label className="slider">
+            <span className="slider-label">Vertical padding</span>
             <input
-              type="number"
+              type="range"
               min={0}
+              max={40}
               value={checkout.paddingY}
               onChange={(e) => patch({ paddingY: Number(e.target.value) })}
             />
+            <span className="slider-value">{checkout.paddingY}px</span>
           </label>
+          <button type="button" className="btn secondary reset-sizes" onClick={resetSizes}>
+            Reset to defaults
+          </button>
         </fieldset>
 
         <fieldset className="end-mode">

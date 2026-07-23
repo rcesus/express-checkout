@@ -177,6 +177,36 @@ input[readonly] {
   margin: 0;
 }
 
+.slider {
+  display: block;
+  margin-bottom: 16px;
+  font-weight: 400;
+}
+
+.slider-label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.slider-value {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.slider input[type="range"] {
+  width: 100%;
+  margin: 8px 0 2px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
 .btn {
   padding: 11px 18px;
   border-radius: 8px;
