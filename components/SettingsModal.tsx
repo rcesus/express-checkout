@@ -206,6 +206,46 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
         </fieldset>
 
         <fieldset className="end-mode">
+          <legend>Button size (Apple Pay and Google Pay)</legend>
+          <label>
+            Height (px)
+            <input
+              type="number"
+              min={0}
+              value={checkout.buttonHeight}
+              onChange={(e) => patch({ buttonHeight: Number(e.target.value) })}
+            />
+          </label>
+          <label>
+            Corner radius (px)
+            <input
+              type="number"
+              min={0}
+              value={checkout.buttonBorderRadius}
+              onChange={(e) => patch({ buttonBorderRadius: Number(e.target.value) })}
+            />
+          </label>
+          <label>
+            Horizontal padding (px)
+            <input
+              type="number"
+              min={0}
+              value={checkout.paddingX}
+              onChange={(e) => patch({ paddingX: Number(e.target.value) })}
+            />
+          </label>
+          <label>
+            Vertical padding (px)
+            <input
+              type="number"
+              min={0}
+              value={checkout.paddingY}
+              onChange={(e) => patch({ paddingY: Number(e.target.value) })}
+            />
+          </label>
+        </fieldset>
+
+        <fieldset className="end-mode">
           <legend>Card networks</legend>
           {SUPPORTED_NETWORKS.map((o) => (
             <label className="radio" key={o.value}>

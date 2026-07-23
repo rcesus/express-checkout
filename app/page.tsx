@@ -124,6 +124,16 @@ export default function Home() {
         currency: "USD",
         supportedNetworks: settings.checkout.supportedNetworks,
         columns: settings.checkout.columns,
+        // Component-wide button sizing. Applies to both the Apple Pay and
+        // Google Pay buttons, not one wallet.
+        appearance: {
+          buttonHeight: settings.checkout.buttonHeight,
+          buttonBorderRadius: settings.checkout.buttonBorderRadius,
+          padding: {
+            x: settings.checkout.paddingX,
+            y: settings.checkout.paddingY,
+          },
+        },
         autopay,
         applePay: {
           enabled: settings.checkout.applePayEnabled,
