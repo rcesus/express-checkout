@@ -59,6 +59,12 @@ export async function POST(req: NextRequest) {
   }
 
   if (!res.ok || !data || data.isSuccess === false) {
+    // A duplicate identifier means the customer already exists. Look it up by
+    // email and reuse that record instead of failing.
+    const existingId = await findCustomerId(entryPoint, privateToken);
+    if (existingId !== null) {
+      return NextResponse.json({ customerId: existingId });
+    }
     const detail = data?.responseText || text.slice(0, 300) || res.statusText;
     return NextResponse.json(
       { error: `Customer creation failed: ${detail}` },
@@ -79,4 +85,23 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ customerId });
+}
+
+// Looks up an existing customer by the persona email for a paypoint and returns
+// its customerId, or null if none is found or the lookup fails.
+async function findCustomerId(
+  entryPoint: string,
+  privateToken: string,
+): Promise<number | string | null> {
+  const filter = `${encodeURIComponent("email(eq)")}=${encodeURIComponent(CUSTOMER.email)}`;
+  const url = `${API_BASE}/Query/customers/${encodeURIComponent(entryPoint)}?${filter}`;
+  try {
+    const res = await fetch(url, { headers: { requestToken: privateToken } });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { Records?: Array<{ customerId?: unknown }> };
+    const id = data?.Records?.[0]?.customerId;
+    return typeof id === "number" || typeof id === "string" ? id : null;
+  } catch {
+    return null;
+  }
 }

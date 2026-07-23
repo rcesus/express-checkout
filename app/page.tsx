@@ -31,6 +31,7 @@ export default function Home() {
   // so tomorrow is the earliest selectable start date.
   const minStartDate = useMemo(() => addDays(isoDate(new Date()), 1), []);
 
+  const [amount, setAmount] = useState("");
   const [frequency, setFrequency] = useState<Frequency>(persona.defaultFrequency);
   const [startDate, setStartDate] = useState(() => addDays(isoDate(new Date()), 1));
   const [endMode, setEndMode] = useState<EndMode>(persona.defaultEndMode);
@@ -89,7 +90,7 @@ export default function Home() {
       entryPoint: settings.entryPoint,
       expressCheckout: {
         mode: "autopay",
-        amount: persona.amount,
+        amount: amountValue,
         fee: 0,
         currency: "USD",
         supportedNetworks: ["visa", "masterCard", "amex", "discover"],
@@ -193,10 +194,10 @@ export default function Home() {
     markStale();
   }
 
-  const amountLabel = persona.amount.toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
-  });
+  const amountValue = useMemo(() => {
+    const parsed = parseFloat(amount);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : persona.amount;
+  }, [amount, persona.amount]);
 
   return (
     <div className="page">
@@ -236,7 +237,18 @@ export default function Home() {
 
           <label>
             Amount
-            <input value={amountLabel} readOnly />
+            <input
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="0.01"
+              value={amount}
+              placeholder={persona.amount.toFixed(2)}
+              onChange={(e) => {
+                setAmount(e.target.value);
+                markStale();
+              }}
+            />
           </label>
 
           <label>
