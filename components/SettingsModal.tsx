@@ -118,7 +118,7 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
         </label>
 
         <label>
-          Private Token {hasPrivateToken && <span className="hint">(saved; enter a new one to replace it)</span>}
+          Private Token
           <input
             type="password"
             value={privateToken}

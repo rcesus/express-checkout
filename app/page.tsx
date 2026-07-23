@@ -68,10 +68,12 @@ export default function Home() {
       const raw = sessionStorage.getItem(SETTINGS_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        setSettings({
-          ...parsed,
+        // Only checkout options are restored. Entrypoint and public token are
+        // never persisted, so they start empty on every new session.
+        setSettings((s) => ({
+          ...s,
           checkout: { ...DEFAULT_CHECKOUT, ...(parsed.checkout ?? {}) },
-        });
+        }));
       }
     } catch {
       // ignore malformed storage
@@ -222,7 +224,9 @@ export default function Home() {
     setSettings(next);
     setHasPrivateToken(privateTokenSaved);
     try {
-      sessionStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
+      // Only checkout options are persisted. Entrypoint and public token stay
+      // in memory for this session and are never written to storage.
+      sessionStorage.setItem(SETTINGS_KEY, JSON.stringify({ checkout: next.checkout }));
     } catch {
       // ignore storage failures
     }
