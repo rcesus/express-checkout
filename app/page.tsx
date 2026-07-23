@@ -47,10 +47,15 @@ export default function Home() {
   const [error, setError] = useState("");
   const [result, setResult] = useState<Result | null>(null);
 
-  // White-flash mitigation, toggled for comparison. "reveal" uncovers the
-  // overlay on the component's ready callback; "fade" uncovers on a fixed timer.
-  const [flashFix, setFlashFix] = useState<"reveal" | "fade">("fade");
   const [covering, setCovering] = useState(false);
+
+  // Clear the component's result message a few seconds after it appears so it
+  // doesn't linger on the page.
+  useEffect(() => {
+    if (!result) return;
+    const t = window.setTimeout(() => setResult(null), 5000);
+    return () => window.clearTimeout(t);
+  }, [result]);
 
   // Load saved paypoint settings and private-token status once.
   useEffect(() => {
@@ -131,9 +136,7 @@ export default function Home() {
         // The ready event is the latest lifecycle signal Payabli exposes; there
         // is no documented "styling applied" callback. A short buffer after it
         // gives the iframe's fetched stylesheet time to paint before we uncover.
-        if (flashFix === "reveal") {
-          window.setTimeout(() => setCovering(false), 250);
-        }
+        window.setTimeout(() => setCovering(false), 250);
       },
       functionCallBackSuccess: (data: {
         data?: { responseData?: { referenceId?: string } };
@@ -161,9 +164,6 @@ export default function Home() {
     // Cover the container so the iframe's own white first paint never shows.
     setCovering(true);
     new PayabliComponent(config);
-    if (flashFix === "fade") {
-      window.setTimeout(() => setCovering(false), 400);
-    }
   }
 
   async function handleContinue() {
@@ -347,20 +347,6 @@ export default function Home() {
               />
             )}
           </fieldset>
-
-          <label>
-            Flash fix
-            <select
-              value={flashFix}
-              onChange={(e) => {
-                setFlashFix(e.target.value as "reveal" | "fade");
-                markStale();
-              }}
-            >
-              <option value="reveal">A: uncover on ready event + 250ms</option>
-              <option value="fade">B: uncover on 400ms timer</option>
-            </select>
-          </label>
 
           {error && <p className="error-text">{error}</p>}
 

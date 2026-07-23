@@ -22,13 +22,3 @@ form,
 [class*="panel"] {
   background-color: transparent !important;
 }
-
-/* Explicit dark background on the checkout's own buttons. Note: the Apple Pay
-   and Google Pay buttons are browser-drawn native controls and ignore this;
-   their look comes from the buttonStyle config, not this stylesheet. */
-button,
-[class*="button"],
-[class*="btn"] {
-  background-color: #161b22 !important;
-  color: #e6edf3 !important;
-}
