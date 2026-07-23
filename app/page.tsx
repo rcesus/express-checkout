@@ -9,6 +9,7 @@ import {
   CUSTOMER,
   isoDate,
   addMonths,
+  addDays,
   type Frequency,
   type EndMode,
 } from "@/lib/personas";
@@ -26,11 +27,15 @@ export default function Home() {
   const [hasPrivateToken, setHasPrivateToken] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
+  // Payabli requires autopay.startDate to be at least 1 day in the future,
+  // so tomorrow is the earliest selectable start date.
+  const minStartDate = useMemo(() => addDays(isoDate(new Date()), 1), []);
+
   const [frequency, setFrequency] = useState<Frequency>(persona.defaultFrequency);
-  const [startDate, setStartDate] = useState(() => isoDate(new Date()));
+  const [startDate, setStartDate] = useState(() => addDays(isoDate(new Date()), 1));
   const [endMode, setEndMode] = useState<EndMode>(persona.defaultEndMode);
   const [endDate, setEndDate] = useState(() =>
-    addMonths(isoDate(new Date()), persona.defaultEndOffsetMonths ?? 6),
+    addMonths(addDays(isoDate(new Date()), 1), persona.defaultEndOffsetMonths ?? 6),
   );
 
   const [scriptLoaded, setScriptLoaded] = useState(false);
@@ -149,6 +154,10 @@ export default function Home() {
       setError("Creating the customer record needs a private token. Add one in settings.");
       return;
     }
+    if (startDate < minStartDate) {
+      setError("Pick a start date at least one day in the future.");
+      return;
+    }
     if (!scriptLoaded || typeof PayabliComponent !== "function") {
       setError("The payment component is still loading. Try again in a moment.");
       return;
@@ -252,6 +261,7 @@ export default function Home() {
             <input
               type="date"
               value={startDate}
+              min={minStartDate}
               onChange={(e) => {
                 setStartDate(e.target.value);
                 markStale();

@@ -47,3 +47,9 @@ export function addMonths(iso: string, months: number): string {
   d.setMonth(d.getMonth() + months);
   return isoDate(d);
 }
+
+export function addDays(iso: string, days: number): string {
+  const d = new Date(iso + "T00:00:00");
+  d.setDate(d.getDate() + days);
+  return isoDate(d);
+}

@@ -63,40 +63,32 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h2>Paypoint settings</h2>
-        <p className="modal-note">
-          Tokens come from your Payabli sandbox paypoint (PartnerHub &gt; API tokens). The public
-          token stays in this browser tab. The private token is stored in an encrypted httpOnly
-          cookie and never reaches page scripts.
-        </p>
+        <h2>Paypoint and Token Settings</h2>
 
         <label>
           Entrypoint
           <input
             value={entryPoint}
             onChange={(e) => setEntryPoint(e.target.value)}
-            placeholder="8cfec329267"
             autoComplete="off"
           />
         </label>
 
         <label>
-          Public token
+          Public Token
           <input
             value={publicToken}
             onChange={(e) => setPublicToken(e.target.value)}
-            placeholder="o.XXXX..."
             autoComplete="off"
           />
         </label>
 
         <label>
-          Private token {hasPrivateToken && <span className="hint">(saved; enter a new one to replace it)</span>}
+          Private Token {hasPrivateToken && <span className="hint">(saved; enter a new one to replace it)</span>}
           <input
             type="password"
             value={privateToken}
             onChange={(e) => setPrivateToken(e.target.value)}
-            placeholder={hasPrivateToken ? "••••••••" : "Required for Tuition and Field Service"}
             autoComplete="off"
           />
         </label>
