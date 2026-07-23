@@ -134,7 +134,7 @@ export default function Home() {
       },
     };
 
-    new window.PayabliComponent(config);
+    new PayabliComponent(config);
   }
 
   async function handleContinue() {
@@ -149,7 +149,7 @@ export default function Home() {
       setError("Creating the customer record needs a private token. Add one in settings.");
       return;
     }
-    if (!scriptLoaded || typeof window.PayabliComponent !== "function") {
+    if (!scriptLoaded || typeof PayabliComponent !== "function") {
       setError("The payment component is still loading. Try again in a moment.");
       return;
     }
