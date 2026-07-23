@@ -1,0 +1,11 @@
+/* Applied inside the Payabli ExpressCheckout iframe via customCssUrl.
+   Goal: repaint the iframe's own white document background to match the
+   dark wallet-checkout card (--panel #161b22) so the two read as one
+   continuous dark surface. Selectors are a first pass; refine against the
+   live iframe DOM once mounted. */
+
+html,
+body {
+  background: #161b22 !important;
+  color: #e6edf3 !important;
+}
