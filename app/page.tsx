@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Script from "next/script";
 import SettingsModal, { PaypointSettings } from "@/components/SettingsModal";
+import { DEFAULT_CHECKOUT } from "@/lib/checkout-options";
 import {
   FREQUENCIES,
   PERSONA,
@@ -23,7 +24,11 @@ type Result = { ok: boolean; message: string };
 export default function Home() {
   const persona = PERSONA;
 
-  const [settings, setSettings] = useState<PaypointSettings>({ entryPoint: "", publicToken: "" });
+  const [settings, setSettings] = useState<PaypointSettings>({
+    entryPoint: "",
+    publicToken: "",
+    checkout: DEFAULT_CHECKOUT,
+  });
   const [hasPrivateToken, setHasPrivateToken] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -61,7 +66,13 @@ export default function Home() {
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem(SETTINGS_KEY);
-      if (raw) setSettings(JSON.parse(raw));
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setSettings({
+          ...parsed,
+          checkout: { ...DEFAULT_CHECKOUT, ...(parsed.checkout ?? {}) },
+        });
+      }
     } catch {
       // ignore malformed storage
     }
@@ -109,19 +120,19 @@ export default function Home() {
         amount: amountValue,
         fee: 0,
         currency: "USD",
-        supportedNetworks: ["visa", "masterCard", "amex", "discover"],
-        columns: 1,
+        supportedNetworks: settings.checkout.supportedNetworks,
+        columns: settings.checkout.columns,
         autopay,
         applePay: {
-          enabled: true,
-          crossBrowser: true,
-          buttonStyle: "black-outline",
-          buttonType: "plain",
+          enabled: settings.checkout.applePayEnabled,
+          crossBrowser: settings.checkout.applePayCrossBrowser,
+          buttonStyle: settings.checkout.applePayButtonStyle,
+          buttonType: settings.checkout.applePayButtonType,
           language: "en-US",
         },
         googlePay: {
-          enabled: true,
-          buttonStyle: "dark",
+          enabled: settings.checkout.googlePayEnabled,
+          buttonStyle: settings.checkout.googlePayButtonStyle,
           buttonType: "plain",
           language: "en",
         },
@@ -234,9 +245,7 @@ export default function Home() {
       />
 
       <header className="topbar">
-        <div>
-          <h1>Recurring wallet checkout</h1>
-        </div>
+        <div />
         <button
           className="gear"
           aria-label="Paypoint settings"
@@ -363,7 +372,6 @@ export default function Home() {
         </section>
 
         <section className="card checkout">
-          <h2>Wallet checkout</h2>
           <div className="pay-wrap">
             <div id={CONTAINER_ID} className="pay-container" />
             <div className="pay-overlay" data-show={covering} />

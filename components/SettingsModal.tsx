@@ -1,10 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  APPLE_PAY_BUTTON_STYLES,
+  APPLE_PAY_BUTTON_TYPES,
+  GOOGLE_PAY_BUTTON_STYLES,
+  SUPPORTED_NETWORKS,
+  COLUMN_OPTIONS,
+  type CheckoutConfig,
+} from "@/lib/checkout-options";
 
 export interface PaypointSettings {
   entryPoint: string;
   publicToken: string;
+  checkout: CheckoutConfig;
 }
 
 interface Props {
@@ -19,6 +28,7 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
   const [entryPoint, setEntryPoint] = useState(settings.entryPoint);
   const [publicToken, setPublicToken] = useState(settings.publicToken);
   const [privateToken, setPrivateToken] = useState("");
+  const [checkout, setCheckout] = useState<CheckoutConfig>(settings.checkout);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -27,16 +37,37 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
       setEntryPoint(settings.entryPoint);
       setPublicToken(settings.publicToken);
       setPrivateToken("");
+      setCheckout(settings.checkout);
       setError("");
     }
   }, [open, settings]);
 
   if (!open) return null;
 
+  function patch(next: Partial<CheckoutConfig>) {
+    setCheckout((c) => ({ ...c, ...next }));
+  }
+
+  function toggleNetwork(value: string) {
+    setCheckout((c) => {
+      const on = c.supportedNetworks.includes(value);
+      return {
+        ...c,
+        supportedNetworks: on
+          ? c.supportedNetworks.filter((n) => n !== value)
+          : [...c.supportedNetworks, value],
+      };
+    });
+  }
+
   async function handleSave() {
     setError("");
     if (!entryPoint.trim() || !publicToken.trim()) {
       setError("Entrypoint and public token are required.");
+      return;
+    }
+    if (checkout.supportedNetworks.length === 0) {
+      setError("Pick at least one card network.");
       return;
     }
     setSaving(true);
@@ -51,7 +82,10 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
         if (!res.ok) throw new Error("Could not store the private token.");
         privateSaved = true;
       }
-      onSave({ entryPoint: entryPoint.trim(), publicToken: publicToken.trim() }, privateSaved);
+      onSave(
+        { entryPoint: entryPoint.trim(), publicToken: publicToken.trim(), checkout },
+        privateSaved,
+      );
       onClose();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong saving settings.");
@@ -91,6 +125,112 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
             onChange={(e) => setPrivateToken(e.target.value)}
             autoComplete="off"
           />
+        </label>
+
+        <hr className="modal-divider" />
+        <h3 className="modal-subhead">Checkout options</h3>
+
+        <fieldset className="end-mode">
+          <legend>Apple Pay</legend>
+          <label className="radio">
+            <input
+              type="checkbox"
+              checked={checkout.applePayEnabled}
+              onChange={(e) => patch({ applePayEnabled: e.target.checked })}
+            />
+            Enabled
+          </label>
+          <label className="radio">
+            <input
+              type="checkbox"
+              checked={checkout.applePayCrossBrowser}
+              disabled={!checkout.applePayEnabled}
+              onChange={(e) => patch({ applePayCrossBrowser: e.target.checked })}
+            />
+            Show on non-Safari browsers
+          </label>
+          <label>
+            Button style
+            <select
+              value={checkout.applePayButtonStyle}
+              disabled={!checkout.applePayEnabled}
+              onChange={(e) => patch({ applePayButtonStyle: e.target.value })}
+            >
+              {APPLE_PAY_BUTTON_STYLES.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Button text
+            <select
+              value={checkout.applePayButtonType}
+              disabled={!checkout.applePayEnabled}
+              onChange={(e) => patch({ applePayButtonType: e.target.value })}
+            >
+              {APPLE_PAY_BUTTON_TYPES.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </fieldset>
+
+        <fieldset className="end-mode">
+          <legend>Google Pay</legend>
+          <label className="radio">
+            <input
+              type="checkbox"
+              checked={checkout.googlePayEnabled}
+              onChange={(e) => patch({ googlePayEnabled: e.target.checked })}
+            />
+            Enabled
+          </label>
+          <label>
+            Button style
+            <select
+              value={checkout.googlePayButtonStyle}
+              disabled={!checkout.googlePayEnabled}
+              onChange={(e) => patch({ googlePayButtonStyle: e.target.value })}
+            >
+              {GOOGLE_PAY_BUTTON_STYLES.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </fieldset>
+
+        <fieldset className="end-mode">
+          <legend>Card networks</legend>
+          {SUPPORTED_NETWORKS.map((o) => (
+            <label className="radio" key={o.value}>
+              <input
+                type="checkbox"
+                checked={checkout.supportedNetworks.includes(o.value)}
+                onChange={() => toggleNetwork(o.value)}
+              />
+              {o.label}
+            </label>
+          ))}
+        </fieldset>
+
+        <label>
+          Layout
+          <select
+            value={String(checkout.columns)}
+            onChange={(e) => patch({ columns: Number(e.target.value) })}
+          >
+            {COLUMN_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
         </label>
 
         {error && <p className="error-text">{error}</p>}

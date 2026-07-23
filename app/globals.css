@@ -50,10 +50,6 @@ h2 {
   margin-bottom: 24px;
 }
 
-.topbar h1 {
-  font-size: 1.6rem;
-}
-
 .gear {
   flex-shrink: 0;
   width: 44px;
@@ -239,25 +235,23 @@ input[readonly] {
   font-size: 0.9rem;
 }
 
-.checkout h2 {
-  font-size: 1.15rem;
-  margin-bottom: 12px;
-}
-
 .pay-wrap {
   position: relative;
 }
 
 .pay-container {
   min-height: 60px;
-  background: var(--panel);
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel-2);
 }
 
 .pay-overlay {
   position: absolute;
   inset: 0;
-  background: var(--panel);
-  border-radius: var(--radius);
+  background: var(--panel-2);
+  border-radius: 8px;
   opacity: 0;
   pointer-events: none;
   /* Fades only on the way out (uncover). */
@@ -285,6 +279,8 @@ input[readonly] {
 .modal {
   width: 100%;
   max-width: 440px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -294,6 +290,17 @@ input[readonly] {
 .modal h2 {
   font-size: 1.2rem;
   margin-bottom: 8px;
+}
+
+.modal-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 20px 0 16px;
+}
+
+.modal-subhead {
+  font-size: 0.95rem;
+  margin-bottom: 12px;
 }
 
 .modal-note {
