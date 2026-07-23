@@ -1,13 +1,12 @@
 // Ad-hoc ExpressCheckout config surfaced as editable controls in the settings
 // modal, so a tester can flip wallet options without a code change. Enum values
-// come from the Payabli ExpressCheckout guide. One exception: Apple Pay
-// buttonStyle is documented with only "black-outline", so the other three below
-// are the standard Apple set and are not guaranteed by the docs.
+// come from the Payabli ExpressCheckout guide. The docs only show "black-outline"
+// for Apple Pay buttonStyle; the rest below are the standard Apple set and are
+// not guaranteed by the docs.
 
 type Option = { value: string; label: string };
 
 export const APPLE_PAY_BUTTON_STYLES: Option[] = [
-  { value: "black-outline", label: "Black Outline" },
   { value: "black", label: "Black" },
   { value: "white", label: "White" },
   { value: "white-outline", label: "White Outline" },
@@ -55,15 +54,25 @@ export interface CheckoutConfig {
   googlePayButtonStyle: string;
   supportedNetworks: string[];
   columns: number;
+  // expressCheckout.appearance. These size the whole wallet-button surface,
+  // both Apple Pay and Google Pay, not one button. Numbers in px.
+  buttonHeight: number;
+  buttonBorderRadius: number;
+  paddingX: number;
+  paddingY: number;
 }
 
 export const DEFAULT_CHECKOUT: CheckoutConfig = {
   applePayEnabled: true,
   applePayCrossBrowser: true,
-  applePayButtonStyle: "black-outline",
+  applePayButtonStyle: "black",
   applePayButtonType: "plain",
   googlePayEnabled: true,
   googlePayButtonStyle: "dark",
   supportedNetworks: ["visa", "masterCard", "amex", "discover"],
   columns: 1,
+  buttonHeight: 50,
+  buttonBorderRadius: 10,
+  paddingX: 10,
+  paddingY: 10,
 };
