@@ -12,13 +12,19 @@ body {
 
 /* Stop inner wrappers from painting their own light background over the dark
    body during the first paint. Forcing them transparent means only the dark
-   body shows through, so there is no lighter block to flash. */
-div,
+   body shows through, so there is no lighter block to flash.
+
+   Wallet buttons are excluded on purpose. Google Pay renders a real button
+   whose fill lives on internal elements with classes like
+   "gpay-card-info-container", so any transparent-background rule that reaches
+   them makes the button render see-through. The old broad "card" wildcard
+   matched that class and did exactly that. Button appearance is driven only by
+   buttonStyle in the component config, never by this stylesheet. */
+div:not([class*="pay"]):not([class*="wallet"]):not([class*="gpay"]):not([class*="btn"]),
 section,
 form,
-[class*="container"],
-[class*="wrapper"],
-[class*="card"],
+[class*="container"]:not([class*="pay"]):not([class*="gpay"]),
+[class*="wrapper"]:not([class*="pay"]):not([class*="gpay"]),
 [class*="panel"] {
   background-color: transparent !important;
 }
