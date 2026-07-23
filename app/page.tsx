@@ -47,6 +47,11 @@ export default function Home() {
   const [error, setError] = useState("");
   const [result, setResult] = useState<Result | null>(null);
 
+  // White-flash mitigation, toggled for comparison. "reveal" uncovers the
+  // overlay on the component's ready callback; "fade" uncovers on a fixed timer.
+  const [flashFix, setFlashFix] = useState<"reveal" | "fade">("fade");
+  const [covering, setCovering] = useState(false);
+
   // Load saved paypoint settings and private-token status once.
   useEffect(() => {
     try {
@@ -65,6 +70,7 @@ export default function Home() {
     if (active) {
       setActive(false);
       setResult(null);
+      setCovering(false);
       const el = document.getElementById(CONTAINER_ID);
       if (el) el.innerHTML = "";
     }
@@ -121,7 +127,9 @@ export default function Home() {
         lastName: CUSTOMER.lastName,
         billingEmail: CUSTOMER.email,
       },
-      functionCallBackReady: () => {},
+      functionCallBackReady: () => {
+        if (flashFix === "reveal") setCovering(false);
+      },
       functionCallBackSuccess: (data: {
         data?: { responseData?: { referenceId?: string } };
         paymentMethod?: string;
@@ -145,7 +153,12 @@ export default function Home() {
       },
     };
 
+    // Cover the container so the iframe's own white first paint never shows.
+    setCovering(true);
     new PayabliComponent(config);
+    if (flashFix === "fade") {
+      window.setTimeout(() => setCovering(false), 400);
+    }
   }
 
   async function handleContinue() {
@@ -182,6 +195,7 @@ export default function Home() {
       renderComponent(customerNumber);
       setActive(true);
     } catch (e) {
+      setCovering(false);
       setError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
       setBusy(false);
@@ -329,6 +343,20 @@ export default function Home() {
             )}
           </fieldset>
 
+          <label>
+            Flash fix
+            <select
+              value={flashFix}
+              onChange={(e) => {
+                setFlashFix(e.target.value as "reveal" | "fade");
+                markStale();
+              }}
+            >
+              <option value="reveal">A: uncover on ready event</option>
+              <option value="fade">B: uncover on 400ms timer</option>
+            </select>
+          </label>
+
           {error && <p className="error-text">{error}</p>}
 
           <button
@@ -345,7 +373,10 @@ export default function Home() {
 
         <section className="card checkout">
           <h2>Wallet checkout</h2>
-          <div id={CONTAINER_ID} className="pay-container" />
+          <div className="pay-wrap">
+            <div id={CONTAINER_ID} className="pay-container" />
+            <div className="pay-overlay" data-show={covering} />
+          </div>
           {result && (
             <p className={result.ok ? "success-text" : "error-text"}>{result.message}</p>
           )}

@@ -244,9 +244,27 @@ input[readonly] {
   margin-bottom: 12px;
 }
 
+.pay-wrap {
+  position: relative;
+}
+
 .pay-container {
   min-height: 60px;
   background: var(--panel);
+}
+
+.pay-overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--panel);
+  border-radius: var(--radius);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+.pay-overlay[data-show="true"] {
+  opacity: 1;
 }
 
 .modal-backdrop {
