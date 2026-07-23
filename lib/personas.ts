@@ -42,14 +42,24 @@ export function isoDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
+// Local-time YYYY-MM-DD. isoDate formats in UTC, which drifts a day west of UTC
+// in the evening. The autopay start-date floor has to match the component's
+// validator, which works in local time, so date math for it formats locally.
+export function localIsoDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 export function addMonths(iso: string, months: number): string {
   const d = new Date(iso + "T00:00:00");
   d.setMonth(d.getMonth() + months);
-  return isoDate(d);
+  return localIsoDate(d);
 }
 
 export function addDays(iso: string, days: number): string {
   const d = new Date(iso + "T00:00:00");
   d.setDate(d.getDate() + days);
-  return isoDate(d);
+  return localIsoDate(d);
 }

@@ -8,7 +8,7 @@ import {
   FREQUENCIES,
   PERSONA,
   CUSTOMER,
-  isoDate,
+  localIsoDate,
   addMonths,
   addDays,
   type Frequency,
@@ -32,18 +32,19 @@ export default function Home() {
   const [hasPrivateToken, setHasPrivateToken] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
-  // The component's own validator parses a date-only startDate ("2026-07-24") as
-  // UTC midnight, but builds its "at least tomorrow" floor in local time. West of
-  // UTC (US timezones) that makes today+1 land a few hours below the floor and get
-  // rejected, so the floor is today+2, which clears the check.
-  const minStartDate = useMemo(() => addDays(isoDate(new Date()), 2), []);
+  // Local tomorrow, matching the floor the component's validator builds in local
+  // time. The start date is sent to the component as a local datetime (see
+  // renderComponent), so tomorrow at local midnight clears its "at least 1 day in
+  // the future" check. A bare date would parse as UTC midnight and, west of UTC,
+  // fall below that floor.
+  const minStartDate = useMemo(() => addDays(localIsoDate(new Date()), 1), []);
 
   const [amount, setAmount] = useState("");
   const [frequency, setFrequency] = useState<Frequency>(persona.defaultFrequency);
-  const [startDate, setStartDate] = useState(() => addDays(isoDate(new Date()), 2));
+  const [startDate, setStartDate] = useState(() => addDays(localIsoDate(new Date()), 1));
   const [endMode, setEndMode] = useState<EndMode>(persona.defaultEndMode);
   const [endDate, setEndDate] = useState(() =>
-    addMonths(addDays(isoDate(new Date()), 2), persona.defaultEndOffsetMonths ?? 6),
+    addMonths(addDays(localIsoDate(new Date()), 1), persona.defaultEndOffsetMonths ?? 6),
   );
 
   const [scriptLoaded, setScriptLoaded] = useState(false);
@@ -104,10 +105,17 @@ export default function Home() {
     const container = document.getElementById(CONTAINER_ID);
     if (container) container.innerHTML = "";
 
+    // The component validates startDate by parsing it and comparing against a floor
+    // it builds in local time (today at local midnight, plus one day). A bare
+    // "YYYY-MM-DD" parses as UTC midnight, which sits below that floor west of UTC,
+    // so tomorrow gets rejected. Sending a local datetime with no zone parses to
+    // local midnight and clears the floor. endDate has no such floor, so it stays
+    // date-only.
+    const startAt = `${startDate}T00:00:00`;
     const autopay =
       endMode === "specificDate"
-        ? { frequency, startDate, endDate, untilCancel: false }
-        : { frequency, startDate, untilCancel: true };
+        ? { frequency, startDate: startAt, endDate, untilCancel: false }
+        : { frequency, startDate: startAt, untilCancel: true };
 
     const config: Record<string, unknown> = {
       type: "expressCheckout",
