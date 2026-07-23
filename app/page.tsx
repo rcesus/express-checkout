@@ -128,7 +128,12 @@ export default function Home() {
         billingEmail: CUSTOMER.email,
       },
       functionCallBackReady: () => {
-        if (flashFix === "reveal") setCovering(false);
+        // The ready event is the latest lifecycle signal Payabli exposes; there
+        // is no documented "styling applied" callback. A short buffer after it
+        // gives the iframe's fetched stylesheet time to paint before we uncover.
+        if (flashFix === "reveal") {
+          window.setTimeout(() => setCovering(false), 250);
+        }
       },
       functionCallBackSuccess: (data: {
         data?: { responseData?: { referenceId?: string } };
@@ -352,7 +357,7 @@ export default function Home() {
                 markStale();
               }}
             >
-              <option value="reveal">A: uncover on ready event</option>
+              <option value="reveal">A: uncover on ready event + 250ms</option>
               <option value="fade">B: uncover on 400ms timer</option>
             </select>
           </label>
