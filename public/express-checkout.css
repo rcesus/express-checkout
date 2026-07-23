@@ -9,3 +9,26 @@ body {
   background: #161b22 !important;
   color: #e6edf3 !important;
 }
+
+/* Stop inner wrappers from painting their own light background over the dark
+   body during the first paint. Forcing them transparent means only the dark
+   body shows through, so there is no lighter block to flash. */
+div,
+section,
+form,
+[class*="container"],
+[class*="wrapper"],
+[class*="card"],
+[class*="panel"] {
+  background-color: transparent !important;
+}
+
+/* Explicit dark background on the checkout's own buttons. Note: the Apple Pay
+   and Google Pay buttons are browser-drawn native controls and ignore this;
+   their look comes from the buttonStyle config, not this stylesheet. */
+button,
+[class*="button"],
+[class*="btn"] {
+  background-color: #161b22 !important;
+  color: #e6edf3 !important;
+}
