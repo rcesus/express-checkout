@@ -30,6 +30,7 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
   const [publicToken, setPublicToken] = useState(settings.publicToken);
   const [privateToken, setPrivateToken] = useState("");
   const [checkout, setCheckout] = useState<CheckoutConfig>(settings.checkout);
+  const [tab, setTab] = useState<"connection" | "checkout" | "sizing">("connection");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -39,6 +40,7 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
       setPublicToken(settings.publicToken);
       setPrivateToken("");
       setCheckout(settings.checkout);
+      setTab("connection");
       setError("");
     }
   }, [open, settings]);
@@ -107,192 +109,253 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h2>Paypoint and Token Settings</h2>
+        <h2>Settings</h2>
 
-        <label>
-          Entrypoint
-          <input
-            value={entryPoint}
-            onChange={(e) => setEntryPoint(e.target.value)}
-            autoComplete="off"
-          />
-        </label>
-
-        <label>
-          Public Token
-          <input
-            value={publicToken}
-            onChange={(e) => setPublicToken(e.target.value)}
-            autoComplete="off"
-          />
-        </label>
-
-        <label>
-          Private Token
-          <input
-            type="password"
-            value={privateToken}
-            onChange={(e) => setPrivateToken(e.target.value)}
-            autoComplete="off"
-          />
-        </label>
-
-        <hr className="modal-divider" />
-        <h3 className="modal-subhead">Checkout options</h3>
-
-        <fieldset className="end-mode">
-          <legend>Apple Pay</legend>
-          <label className="radio">
-            <input
-              type="checkbox"
-              checked={checkout.applePayEnabled}
-              onChange={(e) => patch({ applePayEnabled: e.target.checked })}
-            />
-            Enabled
-          </label>
-          <label className="radio">
-            <input
-              type="checkbox"
-              checked={checkout.applePayCrossBrowser}
-              disabled={!checkout.applePayEnabled}
-              onChange={(e) => patch({ applePayCrossBrowser: e.target.checked })}
-            />
-            Show on non-Safari browsers
-          </label>
-          <label>
-            Button style
-            <select
-              value={checkout.applePayButtonStyle}
-              disabled={!checkout.applePayEnabled}
-              onChange={(e) => patch({ applePayButtonStyle: e.target.value })}
-            >
-              {APPLE_PAY_BUTTON_STYLES.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Button text
-            <select
-              value={checkout.applePayButtonType}
-              disabled={!checkout.applePayEnabled}
-              onChange={(e) => patch({ applePayButtonType: e.target.value })}
-            >
-              {APPLE_PAY_BUTTON_TYPES.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </fieldset>
-
-        <fieldset className="end-mode">
-          <legend>Google Pay</legend>
-          <label className="radio">
-            <input
-              type="checkbox"
-              checked={checkout.googlePayEnabled}
-              onChange={(e) => patch({ googlePayEnabled: e.target.checked })}
-            />
-            Enabled
-          </label>
-          <label>
-            Button style
-            <select
-              value={checkout.googlePayButtonStyle}
-              disabled={!checkout.googlePayEnabled}
-              onChange={(e) => patch({ googlePayButtonStyle: e.target.value })}
-            >
-              {GOOGLE_PAY_BUTTON_STYLES.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </fieldset>
-
-        <fieldset className="end-mode">
-          <legend>Button size (Apple Pay and Google Pay)</legend>
-          <label className="slider">
-            <span className="slider-label">Height</span>
-            <input
-              type="range"
-              min={30}
-              max={70}
-              value={checkout.buttonHeight}
-              onChange={(e) => patch({ buttonHeight: Number(e.target.value) })}
-            />
-            <span className="slider-value">{checkout.buttonHeight}px</span>
-          </label>
-          <label className="slider">
-            <span className="slider-label">Corner radius</span>
-            <input
-              type="range"
-              min={0}
-              max={30}
-              value={checkout.buttonBorderRadius}
-              onChange={(e) => patch({ buttonBorderRadius: Number(e.target.value) })}
-            />
-            <span className="slider-value">{checkout.buttonBorderRadius}px</span>
-          </label>
-          <label className="slider">
-            <span className="slider-label">Horizontal padding</span>
-            <input
-              type="range"
-              min={0}
-              max={40}
-              value={checkout.paddingX}
-              onChange={(e) => patch({ paddingX: Number(e.target.value) })}
-            />
-            <span className="slider-value">{checkout.paddingX}px</span>
-          </label>
-          <label className="slider">
-            <span className="slider-label">Vertical padding</span>
-            <input
-              type="range"
-              min={0}
-              max={40}
-              value={checkout.paddingY}
-              onChange={(e) => patch({ paddingY: Number(e.target.value) })}
-            />
-            <span className="slider-value">{checkout.paddingY}px</span>
-          </label>
-          <button type="button" className="btn secondary reset-sizes" onClick={resetSizes}>
-            Reset to defaults
-          </button>
-        </fieldset>
-
-        <fieldset className="end-mode">
-          <legend>Card networks</legend>
-          {SUPPORTED_NETWORKS.map((o) => (
-            <label className="radio" key={o.value}>
-              <input
-                type="checkbox"
-                checked={checkout.supportedNetworks.includes(o.value)}
-                onChange={() => toggleNetwork(o.value)}
-              />
-              {o.label}
-            </label>
-          ))}
-        </fieldset>
-
-        <label>
-          Layout
-          <select
-            value={String(checkout.columns)}
-            onChange={(e) => patch({ columns: Number(e.target.value) })}
+        <div className="modal-tabs" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === "connection"}
+            className={`modal-tab${tab === "connection" ? " active" : ""}`}
+            onClick={() => setTab("connection")}
           >
-            {COLUMN_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </label>
+            Connection
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === "checkout"}
+            className={`modal-tab${tab === "checkout" ? " active" : ""}`}
+            onClick={() => setTab("checkout")}
+          >
+            Checkout options
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === "sizing"}
+            className={`modal-tab${tab === "sizing" ? " active" : ""}`}
+            onClick={() => setTab("sizing")}
+          >
+            Button sizing
+          </button>
+        </div>
+
+        {tab === "connection" && (
+          <>
+            <label>
+              Entrypoint
+              <input
+                value={entryPoint}
+                onChange={(e) => setEntryPoint(e.target.value)}
+                autoComplete="off"
+              />
+            </label>
+
+            <label>
+              Public Token
+              <input
+                value={publicToken}
+                onChange={(e) => setPublicToken(e.target.value)}
+                autoComplete="off"
+              />
+            </label>
+
+            <label>
+              Private Token
+              <input
+                type="password"
+                value={privateToken}
+                onChange={(e) => setPrivateToken(e.target.value)}
+                autoComplete="off"
+              />
+            </label>
+          </>
+        )}
+
+        {tab === "checkout" && (
+          <>
+            <fieldset className="end-mode">
+              <legend>Payment mode</legend>
+              <label className="radio">
+                <input
+                  type="radio"
+                  name="paymentMode"
+                  checked={checkout.paymentMode === "one_time"}
+                  onChange={() => patch({ paymentMode: "one_time" })}
+                />
+                One-time payment
+              </label>
+              <label className="radio">
+                <input
+                  type="radio"
+                  name="paymentMode"
+                  checked={checkout.paymentMode === "autopay"}
+                  onChange={() => patch({ paymentMode: "autopay" })}
+                />
+                Autopay (recurring)
+              </label>
+            </fieldset>
+
+            <fieldset className="end-mode">
+              <legend>Apple Pay</legend>
+              <label className="radio">
+                <input
+                  type="checkbox"
+                  checked={checkout.applePayEnabled}
+                  onChange={(e) => patch({ applePayEnabled: e.target.checked })}
+                />
+                Enabled
+              </label>
+              <label className="radio">
+                <input
+                  type="checkbox"
+                  checked={checkout.applePayCrossBrowser}
+                  disabled={!checkout.applePayEnabled}
+                  onChange={(e) => patch({ applePayCrossBrowser: e.target.checked })}
+                />
+                Show on non-Safari browsers
+              </label>
+              <label>
+                Button style
+                <select
+                  value={checkout.applePayButtonStyle}
+                  disabled={!checkout.applePayEnabled}
+                  onChange={(e) => patch({ applePayButtonStyle: e.target.value })}
+                >
+                  {APPLE_PAY_BUTTON_STYLES.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Button text
+                <select
+                  value={checkout.applePayButtonType}
+                  disabled={!checkout.applePayEnabled}
+                  onChange={(e) => patch({ applePayButtonType: e.target.value })}
+                >
+                  {APPLE_PAY_BUTTON_TYPES.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </fieldset>
+
+            <fieldset className="end-mode">
+              <legend>Google Pay</legend>
+              <label className="radio">
+                <input
+                  type="checkbox"
+                  checked={checkout.googlePayEnabled}
+                  onChange={(e) => patch({ googlePayEnabled: e.target.checked })}
+                />
+                Enabled
+              </label>
+              <label>
+                Button style
+                <select
+                  value={checkout.googlePayButtonStyle}
+                  disabled={!checkout.googlePayEnabled}
+                  onChange={(e) => patch({ googlePayButtonStyle: e.target.value })}
+                >
+                  {GOOGLE_PAY_BUTTON_STYLES.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </fieldset>
+
+            <fieldset className="end-mode">
+              <legend>Card networks</legend>
+              {SUPPORTED_NETWORKS.map((o) => (
+                <label className="radio" key={o.value}>
+                  <input
+                    type="checkbox"
+                    checked={checkout.supportedNetworks.includes(o.value)}
+                    onChange={() => toggleNetwork(o.value)}
+                  />
+                  {o.label}
+                </label>
+              ))}
+            </fieldset>
+
+            <label>
+              Layout
+              <select
+                value={String(checkout.columns)}
+                onChange={(e) => patch({ columns: Number(e.target.value) })}
+              >
+                {COLUMN_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </>
+        )}
+
+        {tab === "sizing" && (
+          <>
+            <fieldset className="end-mode">
+              <legend>Button size (Apple Pay and Google Pay)</legend>
+              <label className="slider">
+                <span className="slider-label">Height</span>
+                <input
+                  type="range"
+                  min={30}
+                  max={70}
+                  value={checkout.buttonHeight}
+                  onChange={(e) => patch({ buttonHeight: Number(e.target.value) })}
+                />
+                <span className="slider-value">{checkout.buttonHeight}px</span>
+              </label>
+              <label className="slider">
+                <span className="slider-label">Corner radius</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={30}
+                  value={checkout.buttonBorderRadius}
+                  onChange={(e) => patch({ buttonBorderRadius: Number(e.target.value) })}
+                />
+                <span className="slider-value">{checkout.buttonBorderRadius}px</span>
+              </label>
+              <label className="slider">
+                <span className="slider-label">Horizontal padding</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={40}
+                  value={checkout.paddingX}
+                  onChange={(e) => patch({ paddingX: Number(e.target.value) })}
+                />
+                <span className="slider-value">{checkout.paddingX}px</span>
+              </label>
+              <label className="slider">
+                <span className="slider-label">Vertical padding</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={40}
+                  value={checkout.paddingY}
+                  onChange={(e) => patch({ paddingY: Number(e.target.value) })}
+                />
+                <span className="slider-value">{checkout.paddingY}px</span>
+              </label>
+              <button type="button" className="btn secondary reset-sizes" onClick={resetSizes}>
+                Reset to defaults
+              </button>
+            </fieldset>
+          </>
+        )}
 
         {error && <p className="error-text">{error}</p>}
 

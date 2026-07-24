@@ -101,6 +101,8 @@ export default function Home() {
     [settings.entryPoint, settings.publicToken, scriptLoaded],
   );
 
+  const isOneTime = settings.checkout.paymentMode === "one_time";
+
   function renderComponent(customerNumber?: string) {
     const container = document.getElementById(CONTAINER_ID);
     if (container) container.innerHTML = "";
@@ -110,12 +112,46 @@ export default function Home() {
     // "YYYY-MM-DD" parses as UTC midnight, which sits below that floor west of UTC,
     // so tomorrow gets rejected. Sending a local datetime with no zone parses to
     // local midnight and clears the floor. endDate has no such floor, so it stays
-    // date-only.
+    // date-only. One-time charges once, so it carries no autopay block at all.
     const startAt = `${startDate}T00:00:00`;
     const autopay =
       endMode === "specificDate"
         ? { frequency, startDate: startAt, endDate, untilCancel: false }
         : { frequency, startDate: startAt, untilCancel: true };
+
+    const expressCheckout: Record<string, unknown> = {
+      mode: isOneTime ? "one_time" : "autopay",
+      amount: amountValue,
+      fee: 0,
+      currency: "USD",
+      supportedNetworks: settings.checkout.supportedNetworks,
+      columns: settings.checkout.columns,
+      // Component-wide button sizing. Applies to both the Apple Pay and
+      // Google Pay buttons, not one wallet.
+      appearance: {
+        buttonHeight: settings.checkout.buttonHeight,
+        buttonBorderRadius: settings.checkout.buttonBorderRadius,
+        padding: {
+          x: settings.checkout.paddingX,
+          y: settings.checkout.paddingY,
+        },
+      },
+      // Autopay carries the recurring schedule; one-time omits the block entirely.
+      ...(isOneTime ? {} : { autopay }),
+      applePay: {
+        enabled: settings.checkout.applePayEnabled,
+        crossBrowser: settings.checkout.applePayCrossBrowser,
+        buttonStyle: settings.checkout.applePayButtonStyle,
+        buttonType: settings.checkout.applePayButtonType,
+        language: "en-US",
+      },
+      googlePay: {
+        enabled: settings.checkout.googlePayEnabled,
+        buttonStyle: settings.checkout.googlePayButtonStyle,
+        buttonType: "plain",
+        language: "en",
+      },
+    };
 
     const config: Record<string, unknown> = {
       type: "expressCheckout",
@@ -125,38 +161,7 @@ export default function Home() {
       // Custom stylesheet applied inside the checkout iframe. Absolute URL so
       // the iframe can fetch it on whatever domain this deploys to.
       customCssUrl: `${window.location.origin}/express-checkout.css`,
-      expressCheckout: {
-        mode: "autopay",
-        amount: amountValue,
-        fee: 0,
-        currency: "USD",
-        supportedNetworks: settings.checkout.supportedNetworks,
-        columns: settings.checkout.columns,
-        // Component-wide button sizing. Applies to both the Apple Pay and
-        // Google Pay buttons, not one wallet.
-        appearance: {
-          buttonHeight: settings.checkout.buttonHeight,
-          buttonBorderRadius: settings.checkout.buttonBorderRadius,
-          padding: {
-            x: settings.checkout.paddingX,
-            y: settings.checkout.paddingY,
-          },
-        },
-        autopay,
-        applePay: {
-          enabled: settings.checkout.applePayEnabled,
-          crossBrowser: settings.checkout.applePayCrossBrowser,
-          buttonStyle: settings.checkout.applePayButtonStyle,
-          buttonType: settings.checkout.applePayButtonType,
-          language: "en-US",
-        },
-        googlePay: {
-          enabled: settings.checkout.googlePayEnabled,
-          buttonStyle: settings.checkout.googlePayButtonStyle,
-          buttonType: "plain",
-          language: "en",
-        },
-      },
+      expressCheckout,
       customerData: {
         ...(customerNumber ? { customerNumber } : {}),
         firstName: CUSTOMER.firstName,
@@ -174,11 +179,10 @@ export default function Home() {
         paymentMethod?: string;
       }) => {
         const ref = data?.data?.responseData?.referenceId;
+        const label = isOneTime ? "Payment complete" : "Subscription created";
         setResult({
           ok: true,
-          message: ref
-            ? `Subscription created. Reference ${ref}.`
-            : "Subscription created.",
+          message: ref ? `${label}. Reference ${ref}.` : `${label}.`,
         });
       },
       functionCallBackError: (data: { error?: { responseText?: string } }) => {
@@ -205,11 +209,13 @@ export default function Home() {
       setError("Add your entrypoint and public token in settings first.");
       return;
     }
-    if (!hasPrivateToken) {
+    // Autopay pre-creates a customer record (private token) and enforces the
+    // start-date floor. One-time charges once with no schedule, so it skips both.
+    if (!isOneTime && !hasPrivateToken) {
       setError("Creating the customer record needs a private token. Add one in settings.");
       return;
     }
-    if (startDate < minStartDate) {
+    if (!isOneTime && startDate < minStartDate) {
       setError("Pick a start date at least one day in the future.");
       return;
     }
@@ -220,6 +226,13 @@ export default function Home() {
 
     setBusy(true);
     try {
+      if (isOneTime) {
+        // No subscription, so no customer record to pre-create. The component
+        // takes the customer details inline.
+        renderComponent();
+        setActive(true);
+        return;
+      }
       const res = await fetch("/api/customer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -310,74 +323,78 @@ export default function Home() {
             />
           </label>
 
-          <label>
-            Frequency
-            <select
-              value={frequency}
-              onChange={(e) => {
-                setFrequency(e.target.value as Frequency);
-                markStale();
-              }}
-            >
-              {FREQUENCIES.map((f) => (
-                <option key={f.value} value={f.value}>
-                  {f.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          {!isOneTime && (
+            <>
+              <label>
+                Frequency
+                <select
+                  value={frequency}
+                  onChange={(e) => {
+                    setFrequency(e.target.value as Frequency);
+                    markStale();
+                  }}
+                >
+                  {FREQUENCIES.map((f) => (
+                    <option key={f.value} value={f.value}>
+                      {f.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-          <label>
-            Start date
-            <input
-              type="date"
-              value={startDate}
-              min={minStartDate}
-              onChange={(e) => {
-                setStartDate(e.target.value);
-                markStale();
-              }}
-            />
-          </label>
+              <label>
+                Start date
+                <input
+                  type="date"
+                  value={startDate}
+                  min={minStartDate}
+                  onChange={(e) => {
+                    setStartDate(e.target.value);
+                    markStale();
+                  }}
+                />
+              </label>
 
-          <fieldset className="end-mode">
-            <legend>Ends</legend>
-            <label className="radio">
-              <input
-                type="radio"
-                name="endMode"
-                checked={endMode === "untilCancel"}
-                onChange={() => {
-                  setEndMode("untilCancel");
-                  markStale();
-                }}
-              />
-              Until cancelled
-            </label>
-            <label className="radio">
-              <input
-                type="radio"
-                name="endMode"
-                checked={endMode === "specificDate"}
-                onChange={() => {
-                  setEndMode("specificDate");
-                  markStale();
-                }}
-              />
-              Specific date
-            </label>
-            {endMode === "specificDate" && (
-              <input
-                type="date"
-                value={endDate}
-                min={startDate}
-                onChange={(e) => {
-                  setEndDate(e.target.value);
-                  markStale();
-                }}
-              />
-            )}
-          </fieldset>
+              <fieldset className="end-mode">
+                <legend>Ends</legend>
+                <label className="radio">
+                  <input
+                    type="radio"
+                    name="endMode"
+                    checked={endMode === "untilCancel"}
+                    onChange={() => {
+                      setEndMode("untilCancel");
+                      markStale();
+                    }}
+                  />
+                  Until cancelled
+                </label>
+                <label className="radio">
+                  <input
+                    type="radio"
+                    name="endMode"
+                    checked={endMode === "specificDate"}
+                    onChange={() => {
+                      setEndMode("specificDate");
+                      markStale();
+                    }}
+                  />
+                  Specific date
+                </label>
+                {endMode === "specificDate" && (
+                  <input
+                    type="date"
+                    value={endDate}
+                    min={startDate}
+                    onChange={(e) => {
+                      setEndDate(e.target.value);
+                      markStale();
+                    }}
+                  />
+                )}
+              </fieldset>
+            </>
+          )}
 
           {error && <p className="error-text">{error}</p>}
 

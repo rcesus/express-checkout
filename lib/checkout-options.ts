@@ -29,8 +29,8 @@ export const APPLE_PAY_BUTTON_TYPES: Option[] = [
 ];
 
 export const GOOGLE_PAY_BUTTON_STYLES: Option[] = [
-  { value: "dark", label: "Dark" },
-  { value: "light", label: "Light" },
+  { value: "black", label: "Black" },
+  { value: "white", label: "White" },
 ];
 
 export const SUPPORTED_NETWORKS: Option[] = [
@@ -45,7 +45,12 @@ export const COLUMN_OPTIONS: Option[] = [
   { value: "2", label: "2 columns" },
 ];
 
+export type PaymentMode = "one_time" | "autopay";
+
 export interface CheckoutConfig {
+  // one_time charges once; autopay sets up a recurring subscription. Autopay is
+  // the only mode that uses the frequency/start-date/end controls on the form.
+  paymentMode: PaymentMode;
   applePayEnabled: boolean;
   applePayCrossBrowser: boolean;
   applePayButtonStyle: string;
@@ -63,12 +68,13 @@ export interface CheckoutConfig {
 }
 
 export const DEFAULT_CHECKOUT: CheckoutConfig = {
+  paymentMode: "autopay",
   applePayEnabled: true,
   applePayCrossBrowser: true,
   applePayButtonStyle: "black",
   applePayButtonType: "plain",
   googlePayEnabled: true,
-  googlePayButtonStyle: "dark",
+  googlePayButtonStyle: "black",
   supportedNetworks: ["visa", "masterCard", "amex", "discover"],
   columns: 1,
   buttonHeight: 50,
