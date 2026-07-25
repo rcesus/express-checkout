@@ -30,7 +30,7 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
   const [publicToken, setPublicToken] = useState(settings.publicToken);
   const [privateToken, setPrivateToken] = useState("");
   const [checkout, setCheckout] = useState<CheckoutConfig>(settings.checkout);
-  const [tab, setTab] = useState<"connection" | "checkout" | "sizing">("connection");
+  const [tab, setTab] = useState<"connection" | "checkout" | "styling" | "sizing">("connection");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -128,7 +128,16 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
             className={`modal-tab${tab === "checkout" ? " active" : ""}`}
             onClick={() => setTab("checkout")}
           >
-            Checkout options
+            Checkout Options
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === "styling"}
+            className={`modal-tab${tab === "styling" ? " active" : ""}`}
+            onClick={() => setTab("styling")}
+          >
+            Button Styling
           </button>
           <button
             type="button"
@@ -137,7 +146,7 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
             className={`modal-tab${tab === "sizing" ? " active" : ""}`}
             onClick={() => setTab("sizing")}
           >
-            Button sizing
+            Button Sizing
           </button>
         </div>
 
@@ -176,7 +185,7 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
         {tab === "checkout" && (
           <>
             <fieldset className="end-mode">
-              <legend>Payment mode</legend>
+              <legend>Payment Mode</legend>
               <label className="radio">
                 <input
                   type="radio"
@@ -197,6 +206,24 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
               </label>
             </fieldset>
 
+            <fieldset className="end-mode">
+              <legend>Card Networks</legend>
+              {SUPPORTED_NETWORKS.map((o) => (
+                <label className="radio" key={o.value}>
+                  <input
+                    type="checkbox"
+                    checked={checkout.supportedNetworks.includes(o.value)}
+                    onChange={() => toggleNetwork(o.value)}
+                  />
+                  {o.label}
+                </label>
+              ))}
+            </fieldset>
+          </>
+        )}
+
+        {tab === "styling" && (
+          <>
             <fieldset className="end-mode">
               <legend>Apple Pay</legend>
               <label className="radio">
@@ -273,32 +300,20 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
             </fieldset>
 
             <fieldset className="end-mode">
-              <legend>Card networks</legend>
-              {SUPPORTED_NETWORKS.map((o) => (
-                <label className="radio" key={o.value}>
-                  <input
-                    type="checkbox"
-                    checked={checkout.supportedNetworks.includes(o.value)}
-                    onChange={() => toggleNetwork(o.value)}
-                  />
-                  {o.label}
-                </label>
-              ))}
+              <legend>Layout</legend>
+              <label>
+                <select
+                  value={String(checkout.columns)}
+                  onChange={(e) => patch({ columns: Number(e.target.value) })}
+                >
+                  {COLUMN_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </fieldset>
-
-            <label>
-              Layout
-              <select
-                value={String(checkout.columns)}
-                onChange={(e) => patch({ columns: Number(e.target.value) })}
-              >
-                {COLUMN_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </label>
           </>
         )}
 

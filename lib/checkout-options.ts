@@ -41,8 +41,8 @@ export const SUPPORTED_NETWORKS: Option[] = [
 ];
 
 export const COLUMN_OPTIONS: Option[] = [
-  { value: "1", label: "1 column" },
-  { value: "2", label: "2 columns" },
+  { value: "1", label: "Vertical" },
+  { value: "2", label: "Horizontal" },
 ];
 
 export type PaymentMode = "one_time" | "autopay";

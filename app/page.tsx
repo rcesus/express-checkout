@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Script from "next/script";
 import SettingsModal, { PaypointSettings } from "@/components/SettingsModal";
+import ConsoleLog, { type LogEntry, type LogKind } from "@/components/ConsoleLog";
 import { DEFAULT_CHECKOUT } from "@/lib/checkout-options";
 import {
   FREQUENCIES,
@@ -20,6 +21,14 @@ const SANDBOX_SCRIPT = "https://embedded-component-sandbox.payabli.com/component
 const CONTAINER_ID = "pay-component-1";
 
 type Result = { ok: boolean; message: string };
+
+// Show enough of the public token to recognize it without printing the whole
+// value into the console panel. The private token is never in scope here.
+function maskToken(token: string): string {
+  if (!token) return "";
+  if (token.length <= 8) return "****";
+  return `${token.slice(0, 4)}...${token.slice(-4)}`;
+}
 
 export default function Home() {
   const persona = PERSONA;
@@ -54,6 +63,21 @@ export default function Home() {
   const [result, setResult] = useState<Result | null>(null);
 
   const [covering, setCovering] = useState(false);
+
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const logId = useRef(0);
+
+  function pushLog(kind: LogKind, label: string, detail?: unknown) {
+    const text =
+      detail === undefined
+        ? undefined
+        : typeof detail === "string"
+          ? detail
+          : JSON.stringify(detail, null, 2);
+    logId.current += 1;
+    const entry: LogEntry = { id: logId.current, kind, label, detail: text };
+    setLogs((l) => [...l, entry]);
+  }
 
   // Clear the component's result message a few seconds after it appears so it
   // doesn't linger on the page.
@@ -90,6 +114,7 @@ export default function Home() {
       setActive(false);
       setResult(null);
       setCovering(false);
+      setLogs([]);
       const el = document.getElementById(CONTAINER_ID);
       if (el) el.innerHTML = "";
     }
@@ -172,6 +197,7 @@ export default function Home() {
         // The ready event is the latest lifecycle signal Payabli exposes; there
         // is no documented "styling applied" callback. A short buffer after it
         // gives the iframe's fetched stylesheet time to paint before we uncover.
+        pushLog("event", "functionCallBackReady (component mounted)");
         window.setTimeout(() => setCovering(false), 250);
       },
       functionCallBackSuccess: (data: {
@@ -180,21 +206,40 @@ export default function Home() {
       }) => {
         const ref = data?.data?.responseData?.referenceId;
         const label = isOneTime ? "Payment complete" : "Subscription created";
+        pushLog("event", "functionCallBackSuccess", data);
         setResult({
           ok: true,
           message: ref ? `${label}. Reference ${ref}.` : `${label}.`,
         });
       },
       functionCallBackError: (data: { error?: { responseText?: string } }) => {
+        pushLog("event", "functionCallBackError", data);
         setResult({
           ok: false,
           message: data?.error?.responseText || "The payment setup failed.",
         });
       },
       functionCallBackCancel: () => {
+        pushLog("event", "functionCallBackCancel (payer cancelled)");
         setResult({ ok: false, message: "The payer cancelled the setup." });
       },
     };
+
+    // Log the config this page assembles, with the public token masked. The
+    // private token never touches this object, so it can't leak here. The four
+    // functionCallBack* props are functions and drop out of JSON.stringify.
+    pushLog("config", "PayabliComponent config (handed to the component)", {
+      ...config,
+      token: maskToken(settings.publicToken),
+    });
+    // Make the boundary explicit: the wallet charge is not a call this page
+    // makes. It runs inside the Payabli iframe, cross-origin, and this page
+    // never sees its request or response. Outcomes arrive only as the events
+    // above.
+    pushLog(
+      "note",
+      "The wallet authorization and charge is a SEPARATE call. It happens inside the Payabli iframe (cross-origin). This page never sends or receives it. The events below are the only thing it reports back.",
+    );
 
     // Cover the container so the iframe's own white first paint never shows.
     setCovering(true);
@@ -204,6 +249,7 @@ export default function Home() {
   async function handleContinue() {
     setError("");
     setResult(null);
+    setLogs([]);
 
     if (!settings.entryPoint || !settings.publicToken) {
       setError("Add your entrypoint and public token in settings first.");
@@ -233,12 +279,19 @@ export default function Home() {
         setActive(true);
         return;
       }
+      // This is the one real call this page makes on the payment path: it
+      // pre-creates the customer record autopay needs. The wallet charge is not
+      // here; it runs later inside the component's iframe.
+      pushLog("request", "POST /api/customer", {
+        entryPoint: settings.entryPoint,
+      });
       const res = await fetch("/api/customer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ entryPoint: settings.entryPoint }),
       });
       const data = await res.json();
+      pushLog("response", `POST /api/customer (${res.status})`, data);
       if (!res.ok) throw new Error(data.error || "Customer creation failed.");
       const customerNumber = String(data.customerId);
       renderComponent(customerNumber);
@@ -291,6 +344,9 @@ export default function Home() {
       </header>
 
       <main className="grid">
+        <ConsoleLog entries={logs} />
+
+        <div className="right-col">
         <section className="card form">
           <div className="customer-card">
             <span className="customer-label">Customer</span>
@@ -419,6 +475,7 @@ export default function Home() {
             <p className={result.ok ? "success-text" : "error-text"}>{result.message}</p>
           )}
         </section>
+        </div>
       </main>
 
       <SettingsModal
