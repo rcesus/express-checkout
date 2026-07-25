@@ -131,6 +131,29 @@ h2 {
   flex-direction: column;
   gap: 10px;
   font-family: var(--font-geist-mono), ui-monospace, monospace;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) transparent;
+}
+
+.console-body::-webkit-scrollbar {
+  width: 10px;
+}
+
+.console-body::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 6px 0;
+}
+
+.console-body::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--accent), var(--accent-hover));
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+
+.console-body::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--accent-hover), var(--accent));
+  background-clip: padding-box;
 }
 
 .console-empty {
