@@ -232,13 +232,24 @@ export default function Home() {
       ...config,
       token: maskToken(settings.publicToken),
     });
-    // Make the boundary explicit: the wallet charge is not a call this page
-    // makes. It runs inside the Payabli iframe, cross-origin, and this page
-    // never sees its request or response. Outcomes arrive only as the events
-    // above.
+    // Make the boundary explicit. The wallet charge runs inside the Payabli
+    // iframe, cross-origin, so this page doesn't make that call itself. But its
+    // immediate approve/decline DOES come back through the success/error
+    // callbacks below (that reference ID is the transaction). What the page
+    // can't see is what happens afterward server-side, which is what the webhook
+    // note covers.
     pushLog(
       "note",
-      "The wallet authorization and charge is a SEPARATE call. It happens inside the Payabli iframe (cross-origin). This page never sends or receives it. The events below are the only thing it reports back.",
+      "The wallet charge runs inside the Payabli iframe (cross-origin), so this page doesn't make that call. Its immediate approve or decline does come back, through functionCallBackSuccess / functionCallBackError below (the reference ID is the transaction). What the page can't see is what happens after: settlement, funding, and any future recurring charge run on Payabli's schedule with no browser session attached. Those reach you only through webhooks.",
+    );
+    // Per-mode webhook recommendation. Autopay's recurring charges fire later on
+    // Payabli's schedule, so the page will never see them; one-time only needs
+    // the charge result plus the money-movement follow-ups.
+    pushLog(
+      "note",
+      isOneTime
+        ? "Recommended webhooks for one-time: ApprovedPayment / DeclinedPayment for the charge result, then SettledPayment and FundedPayment to follow the money into your account."
+        : "Recommended webhooks for autopay: SubscriptionCreated to confirm the schedule, ApprovedPayment / DeclinedPayment on each recurring charge for the firing and its result (matched to the subscription by the transaction's ScheduleReference), and SubscriptionCompleted when it passes its end date.",
     );
 
     // Cover the container so the iframe's own white first paint never shows.
