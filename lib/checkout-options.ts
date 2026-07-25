@@ -51,6 +51,11 @@ export interface CheckoutConfig {
   // one_time charges once; autopay sets up a recurring subscription. Autopay is
   // the only mode that uses the frequency/start-date/end controls on the form.
   paymentMode: PaymentMode;
+  // Autopay only. Sends the id from POST /api/customer under customerData.customerId
+  // instead of customerData.customerNumber. The ExpressCheckout guide documents
+  // neither key, so this is here to find out what the component actually does with
+  // customerId: identify the existing record, or ignore it and match on name/email.
+  useCustomerId: boolean;
   applePayEnabled: boolean;
   applePayCrossBrowser: boolean;
   applePayButtonStyle: string;
@@ -69,6 +74,7 @@ export interface CheckoutConfig {
 
 export const DEFAULT_CHECKOUT: CheckoutConfig = {
   paymentMode: "autopay",
+  useCustomerId: false,
   applePayEnabled: true,
   applePayCrossBrowser: true,
   applePayButtonStyle: "black",

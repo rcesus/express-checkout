@@ -207,6 +207,19 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
             </fieldset>
 
             <fieldset className="end-mode">
+              <legend>Customer Identifier (autopay)</legend>
+              <label className="radio">
+                <input
+                  type="checkbox"
+                  checked={checkout.useCustomerId}
+                  disabled={checkout.paymentMode !== "autopay"}
+                  onChange={(e) => patch({ useCustomerId: e.target.checked })}
+                />
+                Send as customerId instead of customerNumber
+              </label>
+            </fieldset>
+
+            <fieldset className="end-mode">
               <legend>Card Networks</legend>
               {SUPPORTED_NETWORKS.map((o) => (
                 <label className="radio" key={o.value}>

@@ -66,6 +66,14 @@ export default function Home() {
 
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const logId = useRef(0);
+  // Remembers the last real POST /api/customer call (request, status, response)
+  // so one-time mode can replay it into the console. One-time doesn't pre-create
+  // a customer record, so without this its console skips the customer step.
+  const lastCustomerFetch = useRef<{
+    request: { entryPoint: string };
+    status: number;
+    data: unknown;
+  } | null>(null);
 
   function pushLog(kind: LogKind, label: string, detail?: unknown) {
     const text =
@@ -188,7 +196,11 @@ export default function Home() {
       customCssUrl: `${window.location.origin}/express-checkout.css`,
       expressCheckout,
       customerData: {
-        ...(customerNumber ? { customerNumber } : {}),
+        ...(customerNumber
+          ? settings.checkout.useCustomerId
+            ? { customerId: customerNumber }
+            : { customerNumber }
+          : {}),
         firstName: CUSTOMER.firstName,
         lastName: CUSTOMER.lastName,
         billingEmail: CUSTOMER.email,
@@ -285,7 +297,13 @@ export default function Home() {
     try {
       if (isOneTime) {
         // No subscription, so no customer record to pre-create. The component
-        // takes the customer details inline.
+        // takes the customer details inline. Replay the last real autopay fetch
+        // so the console still shows the customer step.
+        const cached = lastCustomerFetch.current;
+        if (cached) {
+          pushLog("request", "POST /api/customer", cached.request);
+          pushLog("response", `POST /api/customer (${cached.status})`, cached.data);
+        }
         renderComponent();
         setActive(true);
         return;
@@ -303,6 +321,11 @@ export default function Home() {
       });
       const data = await res.json();
       pushLog("response", `POST /api/customer (${res.status})`, data);
+      lastCustomerFetch.current = {
+        request: { entryPoint: settings.entryPoint },
+        status: res.status,
+        data,
+      };
       if (!res.ok) throw new Error(data.error || "Customer creation failed.");
       const customerNumber = String(data.customerId);
       renderComponent(customerNumber);
