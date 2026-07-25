@@ -31,7 +31,7 @@ export const CUSTOMER = {
   firstName: "Jordan",
   lastName: "Rivera",
   email: "jordan.rivera@example.com",
-  address1: "456 Oak Street",
+  address1: "456 Southeast Oak Street",
   city: "Portland",
   state: "OR",
   zip: "97214",

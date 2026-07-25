@@ -45,7 +45,18 @@ export const COLUMN_OPTIONS: Option[] = [
   { value: "2", label: "Horizontal" },
 ];
 
+export const SHIPPING_CONTACT_FIELDS: Option[] = [
+  { value: "postalAddress", label: "Postal address" },
+  { value: "name", label: "Name" },
+  { value: "phoneNumber", label: "Phone number" },
+  { value: "emailAddress", label: "Email address" },
+];
+
 export type PaymentMode = "one_time" | "autopay";
+
+// Tri-state string instead of boolean so the Advanced tab can tell "not set"
+// (omit the key) apart from an explicit false.
+export type TriState = "" | "true" | "false";
 
 export interface CheckoutConfig {
   // one_time charges once; autopay sets up a recurring subscription. Autopay is
@@ -70,6 +81,18 @@ export interface CheckoutConfig {
   buttonBorderRadius: number;
   paddingX: number;
   paddingY: number;
+  includeDetails: TriState;
+  fee: string;
+  currency: string;
+  saveIfSuccess: TriState;
+  applePayLanguage: string;
+  googlePayButtonType: string;
+  googlePayLanguage: string;
+  requiredShippingContactFields: string[];
+  // Experimental. Targets the same customerData.customerId key as
+  // useCustomerId's real flow, so it only applies when that toggle is off.
+  // Here purely to see whether the component/API accepts or ignores it.
+  customerId: string;
 }
 
 export const DEFAULT_CHECKOUT: CheckoutConfig = {
@@ -87,4 +110,13 @@ export const DEFAULT_CHECKOUT: CheckoutConfig = {
   buttonBorderRadius: 10,
   paddingX: 10,
   paddingY: 10,
+  includeDetails: "true",
+  fee: "0",
+  currency: "USD",
+  saveIfSuccess: "false",
+  applePayLanguage: "en-US",
+  googlePayButtonType: "plain",
+  googlePayLanguage: "en",
+  requiredShippingContactFields: [],
+  customerId: "12345",
 };

@@ -155,8 +155,8 @@ export default function Home() {
     const expressCheckout: Record<string, unknown> = {
       mode: isOneTime ? "one_time" : "autopay",
       amount: amountValue,
-      fee: 0,
-      currency: "USD",
+      fee: Number(settings.checkout.fee) || 0,
+      currency: settings.checkout.currency || "USD",
       supportedNetworks: settings.checkout.supportedNetworks,
       columns: settings.checkout.columns,
       // Component-wide button sizing. Applies to both the Apple Pay and
@@ -171,18 +171,27 @@ export default function Home() {
       },
       // Autopay carries the recurring schedule; one-time omits the block entirely.
       ...(isOneTime ? {} : { autopay }),
+      ...(settings.checkout.includeDetails
+        ? { includeDetails: settings.checkout.includeDetails === "true" }
+        : {}),
+      ...(settings.checkout.saveIfSuccess
+        ? { saveIfSuccess: settings.checkout.saveIfSuccess === "true" }
+        : {}),
+      ...(settings.checkout.requiredShippingContactFields.length
+        ? { requiredShippingContactFields: settings.checkout.requiredShippingContactFields }
+        : {}),
       applePay: {
         enabled: settings.checkout.applePayEnabled,
         crossBrowser: settings.checkout.applePayCrossBrowser,
         buttonStyle: settings.checkout.applePayButtonStyle,
         buttonType: settings.checkout.applePayButtonType,
-        language: "en-US",
+        language: settings.checkout.applePayLanguage || "en-US",
       },
       googlePay: {
         enabled: settings.checkout.googlePayEnabled,
         buttonStyle: settings.checkout.googlePayButtonStyle,
-        buttonType: "plain",
-        language: "en",
+        buttonType: settings.checkout.googlePayButtonType || "plain",
+        language: settings.checkout.googlePayLanguage || "en",
       },
     };
 

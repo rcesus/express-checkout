@@ -7,8 +7,10 @@ import {
   GOOGLE_PAY_BUTTON_STYLES,
   SUPPORTED_NETWORKS,
   COLUMN_OPTIONS,
+  SHIPPING_CONTACT_FIELDS,
   DEFAULT_CHECKOUT,
   type CheckoutConfig,
+  type TriState,
 } from "@/lib/checkout-options";
 
 export interface PaypointSettings {
@@ -30,7 +32,9 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
   const [publicToken, setPublicToken] = useState(settings.publicToken);
   const [privateToken, setPrivateToken] = useState("");
   const [checkout, setCheckout] = useState<CheckoutConfig>(settings.checkout);
-  const [tab, setTab] = useState<"connection" | "checkout" | "styling" | "sizing">("connection");
+  const [tab, setTab] = useState<"connection" | "checkout" | "styling" | "sizing" | "advanced">(
+    "connection",
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -57,6 +61,32 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
       buttonBorderRadius: DEFAULT_CHECKOUT.buttonBorderRadius,
       paddingX: DEFAULT_CHECKOUT.paddingX,
       paddingY: DEFAULT_CHECKOUT.paddingY,
+    });
+  }
+
+  function resetAdvanced() {
+    patch({
+      includeDetails: DEFAULT_CHECKOUT.includeDetails,
+      fee: DEFAULT_CHECKOUT.fee,
+      currency: DEFAULT_CHECKOUT.currency,
+      saveIfSuccess: DEFAULT_CHECKOUT.saveIfSuccess,
+      applePayLanguage: DEFAULT_CHECKOUT.applePayLanguage,
+      googlePayButtonType: DEFAULT_CHECKOUT.googlePayButtonType,
+      googlePayLanguage: DEFAULT_CHECKOUT.googlePayLanguage,
+      requiredShippingContactFields: DEFAULT_CHECKOUT.requiredShippingContactFields,
+      customerId: DEFAULT_CHECKOUT.customerId,
+    });
+  }
+
+  function toggleShippingField(value: string) {
+    setCheckout((c) => {
+      const on = c.requiredShippingContactFields.includes(value);
+      return {
+        ...c,
+        requiredShippingContactFields: on
+          ? c.requiredShippingContactFields.filter((n) => n !== value)
+          : [...c.requiredShippingContactFields, value],
+      };
     });
   }
 
@@ -147,6 +177,15 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
             onClick={() => setTab("sizing")}
           >
             Button Sizing
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === "advanced"}
+            className={`modal-tab${tab === "advanced" ? " active" : ""}`}
+            onClick={() => setTab("advanced")}
+          >
+            Advanced
           </button>
         </div>
 
@@ -379,6 +418,109 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
                 <span className="slider-value">{checkout.paddingY}px</span>
               </label>
               <button type="button" className="btn secondary reset-sizes" onClick={resetSizes}>
+                Reset to defaults
+              </button>
+            </fieldset>
+          </>
+        )}
+
+        {tab === "advanced" && (
+          <>
+            <fieldset className="end-mode">
+              <legend>Wallet request options</legend>
+              <label>
+                Include details
+                <select
+                  value={checkout.includeDetails}
+                  onChange={(e) => patch({ includeDetails: e.target.value as TriState })}
+                >
+                  <option value="">Not set</option>
+                  <option value="true">True</option>
+                  <option value="false">False</option>
+                </select>
+              </label>
+              <label>
+                Save if success
+                <select
+                  value={checkout.saveIfSuccess}
+                  onChange={(e) => patch({ saveIfSuccess: e.target.value as TriState })}
+                >
+                  <option value="">Not set</option>
+                  <option value="true">True</option>
+                  <option value="false">False</option>
+                </select>
+              </label>
+              <label>
+                Fee
+                <input
+                  type="text"
+                  value={checkout.fee}
+                  onChange={(e) => patch({ fee: e.target.value })}
+                />
+              </label>
+              <label>
+                Currency
+                <input
+                  type="text"
+                  value={checkout.currency}
+                  onChange={(e) => patch({ currency: e.target.value })}
+                />
+              </label>
+            </fieldset>
+
+            <fieldset className="end-mode">
+              <legend>Wallet language</legend>
+              <label>
+                Apple Pay language
+                <input
+                  type="text"
+                  value={checkout.applePayLanguage}
+                  onChange={(e) => patch({ applePayLanguage: e.target.value })}
+                />
+              </label>
+              <label>
+                Google Pay button type
+                <input
+                  type="text"
+                  value={checkout.googlePayButtonType}
+                  onChange={(e) => patch({ googlePayButtonType: e.target.value })}
+                />
+              </label>
+              <label>
+                Google Pay language
+                <input
+                  type="text"
+                  value={checkout.googlePayLanguage}
+                  onChange={(e) => patch({ googlePayLanguage: e.target.value })}
+                />
+              </label>
+            </fieldset>
+
+            <fieldset className="end-mode">
+              <legend>Required shipping contact fields</legend>
+              {SHIPPING_CONTACT_FIELDS.map((field) => (
+                <label key={field.value} className="radio">
+                  <input
+                    type="checkbox"
+                    checked={checkout.requiredShippingContactFields.includes(field.value)}
+                    onChange={() => toggleShippingField(field.value)}
+                  />
+                  {field.label}
+                </label>
+              ))}
+            </fieldset>
+
+            <fieldset className="end-mode">
+              <legend>Customer ID (experimental)</legend>
+              <label>
+                Customer ID
+                <input
+                  type="text"
+                  value={checkout.customerId}
+                  onChange={(e) => patch({ customerId: e.target.value })}
+                />
+              </label>
+              <button type="button" className="btn secondary reset-advanced" onClick={resetAdvanced}>
                 Reset to defaults
               </button>
             </fieldset>
