@@ -156,7 +156,6 @@ export default function Home() {
       mode: isOneTime ? "one_time" : "autopay",
       amount: amountValue,
       fee: Number(settings.checkout.fee) || 0,
-      currency: settings.checkout.currency || "USD",
       supportedNetworks: settings.checkout.supportedNetworks,
       columns: settings.checkout.columns,
       // Component-wide button sizing. Applies to both the Apple Pay and
@@ -174,9 +173,7 @@ export default function Home() {
       ...(settings.checkout.includeDetails
         ? { includeDetails: settings.checkout.includeDetails === "true" }
         : {}),
-      ...(settings.checkout.saveIfSuccess
-        ? { saveIfSuccess: settings.checkout.saveIfSuccess === "true" }
-        : {}),
+      saveIfSuccess: settings.checkout.saveIfSuccess,
       ...(settings.checkout.requiredShippingContactFields.length
         ? { requiredShippingContactFields: settings.checkout.requiredShippingContactFields }
         : {}),
@@ -190,7 +187,7 @@ export default function Home() {
       googlePay: {
         enabled: settings.checkout.googlePayEnabled,
         buttonStyle: settings.checkout.googlePayButtonStyle,
-        buttonType: settings.checkout.googlePayButtonType || "plain",
+        buttonType: "plain",
         language: settings.checkout.googlePayLanguage || "en",
       },
     };

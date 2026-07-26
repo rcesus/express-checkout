@@ -46,10 +46,62 @@ export const COLUMN_OPTIONS: Option[] = [
 ];
 
 export const SHIPPING_CONTACT_FIELDS: Option[] = [
-  { value: "postalAddress", label: "Postal address" },
   { value: "name", label: "Name" },
-  { value: "phoneNumber", label: "Phone number" },
-  { value: "emailAddress", label: "Email address" },
+  { value: "postalAddress", label: "Postal Address" },
+  { value: "phoneNumber", label: "Phone Number" },
+  { value: "emailAddress", label: "Email Address" },
+];
+
+// BCP 47 locale codes. The ExpressCheckout guide lists these as representative
+// supported values, not a guaranteed-exhaustive enum.
+export const APPLE_PAY_LANGUAGES: Option[] = [
+  { value: "en-US", label: "English (US)" },
+  { value: "es-MX", label: "Spanish (Mexico)" },
+  { value: "es-ES", label: "Spanish (Spain)" },
+  { value: "fr-FR", label: "French" },
+  { value: "de-DE", label: "German" },
+  { value: "it-IT", label: "Italian" },
+  { value: "ja-JP", label: "Japanese" },
+  { value: "ko-KR", label: "Korean" },
+  { value: "zh-CN", label: "Chinese (Simplified)" },
+  { value: "zh-TW", label: "Chinese (Traditional)" },
+  { value: "nl-NL", label: "Dutch" },
+  { value: "pt-BR", label: "Portuguese (Brazil)" },
+  { value: "pt-PT", label: "Portuguese (Portugal)" },
+  { value: "ru-RU", label: "Russian" },
+  { value: "sv-SE", label: "Swedish" },
+  { value: "tr-TR", label: "Turkish" },
+  { value: "pl-PL", label: "Polish" },
+  { value: "cs-CZ", label: "Czech" },
+  { value: "da-DK", label: "Danish" },
+  { value: "fi-FI", label: "Finnish" },
+  { value: "nb-NO", label: "Norwegian (Bokmal)" },
+  { value: "nn-NO", label: "Norwegian (Nynorsk)" },
+  { value: "hu-HU", label: "Hungarian" },
+  { value: "ro-RO", label: "Romanian" },
+  { value: "sk-SK", label: "Slovak" },
+  { value: "uk-UA", label: "Ukrainian" },
+  { value: "vi-VN", label: "Vietnamese" },
+  { value: "th-TH", label: "Thai" },
+];
+
+// ISO 639-1 codes. Same caveat as above: the guide lists these as
+// representative supported values, not a guaranteed-exhaustive enum.
+export const GOOGLE_PAY_LANGUAGES: Option[] = [
+  { value: "en", label: "English" },
+  { value: "ar", label: "Arabic" },
+  { value: "bg", label: "Bulgarian" },
+  { value: "ca", label: "Catalan" },
+  { value: "cs", label: "Czech" },
+  { value: "da", label: "Danish" },
+  { value: "de", label: "German" },
+  { value: "el", label: "Greek" },
+  { value: "es", label: "Spanish" },
+  { value: "et", label: "Estonian" },
+  { value: "fi", label: "Finnish" },
+  { value: "fr", label: "French" },
+  { value: "hr", label: "Croatian" },
+  { value: "id", label: "Indonesian" },
 ];
 
 export type PaymentMode = "one_time" | "autopay";
@@ -83,10 +135,8 @@ export interface CheckoutConfig {
   paddingY: number;
   includeDetails: TriState;
   fee: string;
-  currency: string;
-  saveIfSuccess: TriState;
+  saveIfSuccess: boolean;
   applePayLanguage: string;
-  googlePayButtonType: string;
   googlePayLanguage: string;
   requiredShippingContactFields: string[];
   // Experimental. Targets the same customerData.customerId key as
@@ -112,10 +162,8 @@ export const DEFAULT_CHECKOUT: CheckoutConfig = {
   paddingY: 10,
   includeDetails: "true",
   fee: "0",
-  currency: "USD",
-  saveIfSuccess: "false",
+  saveIfSuccess: false,
   applePayLanguage: "en-US",
-  googlePayButtonType: "plain",
   googlePayLanguage: "en",
   requiredShippingContactFields: [],
   customerId: "12345",

@@ -68,10 +68,8 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
     patch({
       includeDetails: DEFAULT_CHECKOUT.includeDetails,
       fee: DEFAULT_CHECKOUT.fee,
-      currency: DEFAULT_CHECKOUT.currency,
       saveIfSuccess: DEFAULT_CHECKOUT.saveIfSuccess,
       applePayLanguage: DEFAULT_CHECKOUT.applePayLanguage,
-      googlePayButtonType: DEFAULT_CHECKOUT.googlePayButtonType,
       googlePayLanguage: DEFAULT_CHECKOUT.googlePayLanguage,
       requiredShippingContactFields: DEFAULT_CHECKOUT.requiredShippingContactFields,
       customerId: DEFAULT_CHECKOUT.customerId,
@@ -439,16 +437,13 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
                   <option value="false">False</option>
                 </select>
               </label>
-              <label>
+              <label className="radio">
+                <input
+                  type="checkbox"
+                  checked={checkout.saveIfSuccess}
+                  onChange={(e) => patch({ saveIfSuccess: e.target.checked })}
+                />
                 Save if success
-                <select
-                  value={checkout.saveIfSuccess}
-                  onChange={(e) => patch({ saveIfSuccess: e.target.value as TriState })}
-                >
-                  <option value="">Not set</option>
-                  <option value="true">True</option>
-                  <option value="false">False</option>
-                </select>
               </label>
               <label>
                 Fee
@@ -456,14 +451,6 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
                   type="text"
                   value={checkout.fee}
                   onChange={(e) => patch({ fee: e.target.value })}
-                />
-              </label>
-              <label>
-                Currency
-                <input
-                  type="text"
-                  value={checkout.currency}
-                  onChange={(e) => patch({ currency: e.target.value })}
                 />
               </label>
             </fieldset>
@@ -476,14 +463,6 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
                   type="text"
                   value={checkout.applePayLanguage}
                   onChange={(e) => patch({ applePayLanguage: e.target.value })}
-                />
-              </label>
-              <label>
-                Google Pay button type
-                <input
-                  type="text"
-                  value={checkout.googlePayButtonType}
-                  onChange={(e) => patch({ googlePayButtonType: e.target.value })}
                 />
               </label>
               <label>
