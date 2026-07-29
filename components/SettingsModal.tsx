@@ -68,6 +68,7 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
     patch({
       includeDetails: DEFAULT_CHECKOUT.includeDetails,
       fee: DEFAULT_CHECKOUT.fee,
+      currency: DEFAULT_CHECKOUT.currency,
       saveIfSuccess: DEFAULT_CHECKOUT.saveIfSuccess,
       applePayLanguage: DEFAULT_CHECKOUT.applePayLanguage,
       googlePayLanguage: DEFAULT_CHECKOUT.googlePayLanguage,
@@ -451,6 +452,14 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
                   type="text"
                   value={checkout.fee}
                   onChange={(e) => patch({ fee: e.target.value })}
+                />
+              </label>
+              <label>
+                Currency
+                <input
+                  type="text"
+                  value={checkout.currency}
+                  onChange={(e) => patch({ currency: e.target.value })}
                 />
               </label>
             </fieldset>

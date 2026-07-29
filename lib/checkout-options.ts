@@ -135,6 +135,7 @@ export interface CheckoutConfig {
   paddingY: number;
   includeDetails: TriState;
   fee: string;
+  currency: string;
   saveIfSuccess: boolean;
   applePayLanguage: string;
   googlePayLanguage: string;
@@ -162,6 +163,7 @@ export const DEFAULT_CHECKOUT: CheckoutConfig = {
   paddingY: 10,
   includeDetails: "true",
   fee: "0",
+  currency: "USD",
   saveIfSuccess: false,
   applePayLanguage: "en-US",
   googlePayLanguage: "en",

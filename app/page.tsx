@@ -156,6 +156,7 @@ export default function Home() {
       mode: isOneTime ? "one_time" : "autopay",
       amount: amountValue,
       fee: Number(settings.checkout.fee) || 0,
+      currency: settings.checkout.currency || "USD",
       supportedNetworks: settings.checkout.supportedNetworks,
       columns: settings.checkout.columns,
       // Component-wide button sizing. Applies to both the Apple Pay and
