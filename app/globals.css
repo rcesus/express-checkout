@@ -301,6 +301,9 @@ h2 {
   border: 1px solid var(--border);
   border-radius: 8px;
   overflow: hidden;
+  /* Cap at roughly five rows, then scroll. */
+  max-height: 280px;
+  overflow-y: auto;
 }
 
 .search-results li + li {

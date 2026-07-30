@@ -73,11 +73,26 @@ export async function GET(req: NextRequest) {
   // lastname OR email contains q". Fire one contains-filtered request per field
   // and merge. limitRecord caps each field's hits.
   const base = `${API_BASE}/Query/customers/${encodeURIComponent(entryPoint)}`;
-  const fields = ["firstname", "lastname", "email"];
-  const requests = fields.map((field) => {
-    const url = `${base}?${field}(ct)=${encodeURIComponent(q)}&limitRecord=25`;
-    return fetch(url, { headers: { requestToken: privateToken } });
-  });
+  const enc = encodeURIComponent;
+  const urls = [
+    `${base}?firstname(ct)=${enc(q)}&limitRecord=25`,
+    `${base}?lastname(ct)=${enc(q)}&limitRecord=25`,
+    `${base}?email(ct)=${enc(q)}&limitRecord=25`,
+  ];
+
+  // A multi-word query like "RC Cowie" won't be found by any single-field
+  // contains filter (no one field holds the whole string). Add a request that
+  // ANDs first word against firstname and the rest against lastname.
+  const words = q.split(/\s+/).filter(Boolean);
+  if (words.length >= 2) {
+    const first = words[0];
+    const last = words.slice(1).join(" ");
+    urls.push(`${base}?firstname(ct)=${enc(first)}&lastname(ct)=${enc(last)}&limitRecord=25`);
+  }
+
+  const requests = urls.map((url) =>
+    fetch(url, { headers: { requestToken: privateToken } }),
+  );
 
   let responses: Response[];
   try {
