@@ -8,7 +8,6 @@ import { DEFAULT_CHECKOUT } from "@/lib/checkout-options";
 import {
   FREQUENCIES,
   PERSONA,
-  CUSTOMER,
   localIsoDate,
   addMonths,
   addDays,
@@ -21,6 +20,33 @@ const SANDBOX_SCRIPT = "https://embedded-component-sandbox.payabli.com/component
 const CONTAINER_ID = "pay-component-1";
 
 type Result = { ok: boolean; message: string };
+
+// A customer as this page holds it, whether selected from search or just
+// created. Matches the shape both /api endpoints normalize to.
+type Customer = {
+  customerId: string | number;
+  customerNumber?: string | number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  address1: string;
+  city: string;
+  state: string;
+  zip: string;
+  country: string;
+};
+
+// Blank create-new form. Country defaults to US to match the create endpoint.
+const EMPTY_FORM = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  address1: "",
+  city: "",
+  state: "",
+  zip: "",
+  country: "US",
+};
 
 // Show enough of the public token to recognize it without printing the whole
 // value into the console panel. The private token is never in scope here.
@@ -64,13 +90,30 @@ export default function Home() {
 
   const [covering, setCovering] = useState(false);
 
+  // The customer express checkout will run against, set either by picking a
+  // search result or by creating a new record through the form.
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+
+  // Search-a-customer state.
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<Customer[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState("");
+
+  // Create-a-customer state.
+  const [creating, setCreating] = useState(false);
+  const [newCustomer, setNewCustomer] = useState(EMPTY_FORM);
+  const [createBusy, setCreateBusy] = useState(false);
+  const [createError, setCreateError] = useState("");
+
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const logId = useRef(0);
-  // Remembers the last real POST /api/customer call (request, status, response)
-  // so one-time mode can replay it into the console. One-time doesn't pre-create
-  // a customer record, so without this its console skips the customer step.
+  // Remembers the last real customer call (the GET that selected a customer, or
+  // the POST that created one) so both payment modes can replay it into the
+  // console instead of re-hitting the API when Continue is pressed.
   const lastCustomerFetch = useRef<{
-    request: { entryPoint: string };
+    label: string;
+    request: unknown;
     status: number;
     data: unknown;
   } | null>(null);
@@ -127,6 +170,124 @@ export default function Home() {
       if (el) el.innerHTML = "";
     }
     setError("");
+  }
+
+  async function runSearch() {
+    setSearchError("");
+    if (!settings.entryPoint) {
+      setSearchError("Add your entrypoint in settings first.");
+      return;
+    }
+    if (!hasPrivateToken) {
+      setSearchError("Searching customers needs a private token. Add one in settings.");
+      return;
+    }
+    const q = searchQuery.trim();
+    if (!q) {
+      setSearchError("Type a name or email to search.");
+      return;
+    }
+    setSearching(true);
+    try {
+      const url = `/api/customers?entryPoint=${encodeURIComponent(
+        settings.entryPoint,
+      )}&q=${encodeURIComponent(q)}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Customer search failed.");
+      const customers: Customer[] = data.customers ?? [];
+      setSearchResults(customers);
+      // Remember this GET so Continue can replay it into the console. The picked
+      // record is what express checkout runs against.
+      lastCustomerFetch.current = {
+        label: `GET /api/customers?q=${q}`,
+        request: { entryPoint: settings.entryPoint, q },
+        status: res.status,
+        data,
+      };
+      if (!customers.length) setSearchError("No matching customers.");
+    } catch (e) {
+      setSearchError(e instanceof Error ? e.message : "Customer search failed.");
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  function selectCustomer(c: Customer) {
+    setSelectedCustomer(c);
+    setSearchResults([]);
+    setSearchQuery("");
+    setSearchError("");
+    setCreating(false);
+    markStale();
+  }
+
+  function clearSelected() {
+    setSelectedCustomer(null);
+    markStale();
+  }
+
+  function cancelCreate() {
+    setCreating(false);
+    setNewCustomer(EMPTY_FORM);
+    setCreateError("");
+  }
+
+  function setNewField(key: keyof typeof EMPTY_FORM) {
+    return (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setNewCustomer((f) => ({ ...f, [key]: value }));
+    };
+  }
+
+  async function createCustomer() {
+    setCreateError("");
+    if (!settings.entryPoint) {
+      setCreateError("Add your entrypoint in settings first.");
+      return;
+    }
+    if (!hasPrivateToken) {
+      setCreateError("Creating a customer needs a private token. Add one in settings.");
+      return;
+    }
+    if (!newCustomer.email.trim()) {
+      setCreateError("Email is required. It's the field the record matches on.");
+      return;
+    }
+    setCreateBusy(true);
+    try {
+      const request = { entryPoint: settings.entryPoint, ...newCustomer };
+      const res = await fetch("/api/customer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Customer creation failed.");
+      lastCustomerFetch.current = {
+        label: "POST /api/customer",
+        request,
+        status: res.status,
+        data,
+      };
+      // Build the selected record from what was typed plus the returned id.
+      selectCustomer({
+        customerId: data.customerId,
+        firstName: newCustomer.firstName,
+        lastName: newCustomer.lastName,
+        email: newCustomer.email,
+        address1: newCustomer.address1,
+        city: newCustomer.city,
+        state: newCustomer.state,
+        zip: newCustomer.zip,
+        country: newCustomer.country,
+      });
+      setNewCustomer(EMPTY_FORM);
+    } catch (e) {
+      setCreateError(e instanceof Error ? e.message : "Customer creation failed.");
+    } finally {
+      setCreateBusy(false);
+    }
   }
 
   const readyToPay = useMemo(
@@ -208,9 +369,9 @@ export default function Home() {
             ? { customerId: customerNumber }
             : { customerNumber }
           : {}),
-        firstName: CUSTOMER.firstName,
-        lastName: CUSTOMER.lastName,
-        billingEmail: CUSTOMER.email,
+        firstName: selectedCustomer?.firstName ?? "",
+        lastName: selectedCustomer?.lastName ?? "",
+        billingEmail: selectedCustomer?.email ?? "",
       },
       functionCallBackReady: () => {
         // The ready event is the latest lifecycle signal Payabli exposes; there
@@ -285,12 +446,14 @@ export default function Home() {
       setError("Add your entrypoint and public token in settings first.");
       return;
     }
-    // Autopay pre-creates a customer record (private token) and enforces the
-    // start-date floor. One-time charges once with no schedule, so it skips both.
-    if (!isOneTime && !hasPrivateToken) {
-      setError("Creating the customer record needs a private token. Add one in settings.");
+    // A customer already exists by this point: it was either picked from search
+    // or created through the form, and both paths set selectedCustomer.
+    if (!selectedCustomer) {
+      setError("Search for a customer or create one first.");
       return;
     }
+    // Autopay enforces the start-date floor. One-time charges once with no
+    // schedule, so it skips the check.
     if (!isOneTime && startDate < minStartDate) {
       setError("Pick a start date at least one day in the future.");
       return;
@@ -302,40 +465,21 @@ export default function Home() {
 
     setBusy(true);
     try {
-      if (isOneTime) {
-        // No subscription, so no customer record to pre-create. The component
-        // takes the customer details inline. Replay the last real autopay fetch
-        // so the console still shows the customer step.
-        const cached = lastCustomerFetch.current;
-        if (cached) {
-          pushLog("request", "POST /api/customer", cached.request);
-          pushLog("response", `POST /api/customer (${cached.status})`, cached.data);
-        }
-        renderComponent();
-        setActive(true);
-        return;
+      // The real customer call already happened during search or create. Replay
+      // it into the console so the customer step is visible, without re-hitting
+      // the API.
+      const cached = lastCustomerFetch.current;
+      if (cached) {
+        pushLog("request", cached.label, cached.request);
+        pushLog("response", `${cached.label} (${cached.status})`, cached.data);
       }
-      // This is the one real call this page makes on the payment path: it
-      // pre-creates the customer record autopay needs. The wallet charge is not
-      // here; it runs later inside the component's iframe.
-      pushLog("request", "POST /api/customer", {
-        entryPoint: settings.entryPoint,
-      });
-      const res = await fetch("/api/customer", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ entryPoint: settings.entryPoint }),
-      });
-      const data = await res.json();
-      pushLog("response", `POST /api/customer (${res.status})`, data);
-      lastCustomerFetch.current = {
-        request: { entryPoint: settings.entryPoint },
-        status: res.status,
-        data,
-      };
-      if (!res.ok) throw new Error(data.error || "Customer creation failed.");
-      const customerNumber = String(data.customerId);
-      renderComponent(customerNumber);
+      // One-time passes the customer inline with no id; autopay ties the
+      // subscription to the selected record by its id.
+      if (isOneTime) {
+        renderComponent();
+      } else {
+        renderComponent(String(selectedCustomer.customerId));
+      }
       setActive(true);
     } catch (e) {
       setCovering(false);
@@ -391,13 +535,178 @@ export default function Home() {
         <section className="card form">
           <div className="customer-card">
             <span className="customer-label">Customer</span>
-            <p className="customer-name">
-              {CUSTOMER.firstName} {CUSTOMER.lastName}
-            </p>
-            <p className="customer-line">
-              {CUSTOMER.address1}, {CUSTOMER.city}, {CUSTOMER.state} {CUSTOMER.zip}
-            </p>
-            <p className="customer-line">{CUSTOMER.email}</p>
+
+            {selectedCustomer ? (
+              <>
+                <p className="customer-name">
+                  {selectedCustomer.firstName} {selectedCustomer.lastName}
+                </p>
+                {(selectedCustomer.address1 ||
+                  selectedCustomer.city ||
+                  selectedCustomer.state ||
+                  selectedCustomer.zip) && (
+                  <p className="customer-line">
+                    {[
+                      selectedCustomer.address1,
+                      selectedCustomer.city,
+                      [selectedCustomer.state, selectedCustomer.zip]
+                        .filter(Boolean)
+                        .join(" "),
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
+                  </p>
+                )}
+                <p className="customer-line">{selectedCustomer.email}</p>
+                <button
+                  type="button"
+                  className="link-btn"
+                  onClick={clearSelected}
+                >
+                  Change customer
+                </button>
+              </>
+            ) : creating ? (
+              <div className="customer-form">
+                <label>
+                  First name
+                  <input
+                    type="text"
+                    value={newCustomer.firstName}
+                    onChange={setNewField("firstName")}
+                  />
+                </label>
+                <label>
+                  Last name
+                  <input
+                    type="text"
+                    value={newCustomer.lastName}
+                    onChange={setNewField("lastName")}
+                  />
+                </label>
+                <label>
+                  Email
+                  <input
+                    type="email"
+                    value={newCustomer.email}
+                    onChange={setNewField("email")}
+                  />
+                </label>
+                <label>
+                  Address
+                  <input
+                    type="text"
+                    value={newCustomer.address1}
+                    onChange={setNewField("address1")}
+                  />
+                </label>
+                <label>
+                  City
+                  <input
+                    type="text"
+                    value={newCustomer.city}
+                    onChange={setNewField("city")}
+                  />
+                </label>
+                <label>
+                  State
+                  <input
+                    type="text"
+                    value={newCustomer.state}
+                    onChange={setNewField("state")}
+                  />
+                </label>
+                <label>
+                  Zip
+                  <input
+                    type="text"
+                    value={newCustomer.zip}
+                    onChange={setNewField("zip")}
+                  />
+                </label>
+                <label>
+                  Country
+                  <input
+                    type="text"
+                    value={newCustomer.country}
+                    onChange={setNewField("country")}
+                  />
+                </label>
+                {createError && <p className="error-text">{createError}</p>}
+                <div className="form-actions">
+                  <button
+                    type="button"
+                    className="btn primary"
+                    onClick={createCustomer}
+                    disabled={createBusy}
+                  >
+                    {createBusy ? "Creating..." : "Create customer"}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn secondary"
+                    onClick={cancelCreate}
+                    disabled={createBusy}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="customer-search">
+                <div className="search-row">
+                  <input
+                    type="text"
+                    placeholder="Search by name or email"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        runSearch();
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="btn secondary"
+                    onClick={runSearch}
+                    disabled={searching}
+                  >
+                    {searching ? "Searching..." : "Search"}
+                  </button>
+                </div>
+                {searchError && <p className="error-text">{searchError}</p>}
+                {searchResults.length > 0 && (
+                  <ul className="search-results">
+                    {searchResults.map((c) => (
+                      <li key={String(c.customerId)}>
+                        <button
+                          type="button"
+                          className="result-row"
+                          onClick={() => selectCustomer(c)}
+                        >
+                          <span className="result-name">
+                            {c.firstName} {c.lastName}
+                          </span>
+                          <span className="result-email">{c.email}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <button
+                  type="button"
+                  className="link-btn"
+                  onClick={() => {
+                    setCreating(true);
+                    setSearchError("");
+                  }}
+                >
+                  Create new customer
+                </button>
+              </div>
+            )}
           </div>
 
           <label>
@@ -498,7 +807,7 @@ export default function Home() {
           <button
             className="btn primary continue"
             onClick={handleContinue}
-            disabled={busy || !readyToPay}
+            disabled={busy || !readyToPay || !selectedCustomer}
           >
             {busy ? "Setting up..." : "Continue to payment"}
           </button>

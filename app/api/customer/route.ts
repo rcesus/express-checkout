@@ -2,13 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { randomUUID } from "crypto";
 import { decrypt } from "@/lib/crypto";
-import { CUSTOMER } from "@/lib/personas";
 
 const COOKIE_NAME = "payabli_private_token";
 const API_BASE = "https://api-sandbox.payabli.com/api";
 
 export async function POST(req: NextRequest) {
-  let body: { entryPoint?: string };
+  let body: {
+    entryPoint?: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    address1?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+    country?: string;
+  };
   try {
     body = await req.json();
   } catch {
@@ -18,6 +27,12 @@ export async function POST(req: NextRequest) {
   const entryPoint = body.entryPoint?.trim();
   if (!entryPoint) {
     return NextResponse.json({ error: "entryPoint is required." }, { status: 400 });
+  }
+
+  const email = body.email?.trim();
+  if (!email) {
+    // email is the identifier the upsert matches on, so it's required.
+    return NextResponse.json({ error: "email is required." }, { status: 400 });
   }
 
   const cookieStore = await cookies();
@@ -41,14 +56,14 @@ export async function POST(req: NextRequest) {
       idempotencyKey: randomUUID(),
     },
     body: JSON.stringify({
-      firstname: CUSTOMER.firstName,
-      lastname: CUSTOMER.lastName,
-      email: CUSTOMER.email,
-      address1: CUSTOMER.address1,
-      city: CUSTOMER.city,
-      state: CUSTOMER.state,
-      zip: CUSTOMER.zip,
-      country: CUSTOMER.country,
+      firstname: body.firstName?.trim() ?? "",
+      lastname: body.lastName?.trim() ?? "",
+      email,
+      address1: body.address1?.trim() ?? "",
+      city: body.city?.trim() ?? "",
+      state: body.state?.trim() ?? "",
+      zip: body.zip?.trim() ?? "",
+      country: body.country?.trim() || "US",
       identifierFields: ["email"],
     }),
   });

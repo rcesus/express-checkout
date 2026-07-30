@@ -276,6 +276,94 @@ h2 {
   color: var(--muted);
 }
 
+.customer-search {
+  margin-top: 8px;
+}
+
+.search-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.search-row input {
+  margin-top: 0;
+}
+
+.search-row .btn {
+  white-space: nowrap;
+}
+
+.search-results {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.search-results li + li {
+  border-top: 1px solid var(--border);
+}
+
+.result-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.result-row:hover {
+  background: var(--panel-2);
+}
+
+.result-name {
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.result-email {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.link-btn {
+  margin-top: 10px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.link-btn:hover {
+  color: var(--accent-hover);
+}
+
+.customer-form {
+  margin-top: 10px;
+}
+
+.customer-form label {
+  margin-bottom: 12px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
 label {
   display: block;
   margin-bottom: 16px;
