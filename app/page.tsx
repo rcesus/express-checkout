@@ -373,11 +373,14 @@ export default function Home() {
         lastName: selectedCustomer?.lastName ?? "",
         billingEmail: selectedCustomer?.email ?? "",
       },
-      functionCallBackReady: () => {
+      functionCallBackReady: (ready?: { applePay?: boolean; googlePay?: boolean }) => {
         // The ready event is the latest lifecycle signal Payabli exposes; there
         // is no documented "styling applied" callback. A short buffer after it
         // gives the iframe's fetched stylesheet time to paint before we uncover.
-        pushLog("event", "functionCallBackReady (component mounted)");
+        // Its payload reports which wallets are available. ExpressCheckout only
+        // draws Apple Pay / Google Pay buttons, so if both are false the mount
+        // succeeds but the container is empty with no error.
+        pushLog("event", "functionCallBackReady (component mounted)", ready);
         window.setTimeout(() => setCovering(false), 250);
       },
       functionCallBackSuccess: (data: {
