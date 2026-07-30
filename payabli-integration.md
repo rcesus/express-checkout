@@ -1,6 +1,6 @@
 # Payabli Integration Plan
 
-Integration plan for the ExpressCheckout Recurring Wallet Sample App. Payabli skills read this file for context. Full product requirements live in [prd-expresscheckout-recurring-wallet-sample-app.md](prd-expresscheckout-recurring-wallet-sample-app.md).
+Integration plan for the ExpressCheckout Recurring Wallet Sample App. Payabli skills read this file for context.
 
 ## Use case
 
