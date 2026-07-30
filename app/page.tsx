@@ -435,6 +435,12 @@ export default function Home() {
     // Cover the container so the iframe's own white first paint never shows.
     setCovering(true);
     new PayabliComponent(config);
+    // functionCallBackReady is the only thing that lifts the cover on a healthy
+    // mount. If it never fires, the opaque overlay hides a component that may
+    // have mounted fine underneath, which reads as "nothing rendered, no
+    // errors." This fallback uncovers after a few seconds no matter what, so a
+    // mounted component can never stay hidden with no feedback.
+    window.setTimeout(() => setCovering(false), 4000);
   }
 
   async function handleContinue() {
