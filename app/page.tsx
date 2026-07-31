@@ -72,7 +72,7 @@ export default function Home() {
   });
   const [hasPrivateToken, setHasPrivateToken] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"dark" | "light" | "win95">("dark");
 
   // Earliest start whose UTC date is strictly after today's UTC date, so the
   // Subscription/add "future" check passes in any timezone (see earliestStartDate).
@@ -145,20 +145,24 @@ export default function Home() {
   }, [result]);
 
   // Restore the saved theme once and reflect it on the document. Dark is the
-  // default, so only light needs the data-theme attribute; dark falls back to
-  // the base :root palette.
+  // default and the base :root palette; light and win95 carry a data-theme
+  // attribute.
   useEffect(() => {
     const saved = window.localStorage.getItem(THEME_KEY);
-    const next = saved === "light" ? "light" : "dark";
+    const next = saved === "light" || saved === "win95" ? saved : "dark";
     setTheme(next);
     document.documentElement.setAttribute("data-theme", next);
   }, []);
 
-  function toggleTheme() {
-    const next = theme === "dark" ? "light" : "dark";
+  function applyTheme(next: "dark" | "light" | "win95") {
     setTheme(next);
     document.documentElement.setAttribute("data-theme", next);
     window.localStorage.setItem(THEME_KEY, next);
+  }
+
+  function toggleTheme() {
+    // Sun/moon flips between light and dark, and leaves win95 for dark.
+    applyTheme(theme === "dark" ? "light" : "dark");
   }
 
   // Load saved paypoint settings and private-token status once.
@@ -599,13 +603,25 @@ export default function Home() {
           <button
             className="gear"
             aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            // The iframe's theme is fixed at mount, so lock the toggle while the
-            // component is rendered to avoid a host/iframe theme mismatch.
+            // The iframe's theme is fixed at mount, so lock the theme controls
+            // while the component is rendered to avoid a host/iframe mismatch.
             disabled={active}
             title={active ? "Theme is locked while the payment component is rendered" : undefined}
             onClick={toggleTheme}
           >
             {theme === "dark" ? "☀" : "☾"}
+          </button>
+          <button
+            className="gear"
+            aria-label="Switch to Windows 95 mode"
+            aria-pressed={theme === "win95"}
+            disabled={active}
+            title={
+              active ? "Theme is locked while the payment component is rendered" : "Windows 95 mode"
+            }
+            onClick={() => applyTheme(theme === "win95" ? "dark" : "win95")}
+          >
+            95
           </button>
           <button
             className="gear"

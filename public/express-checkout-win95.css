@@ -1,0 +1,9 @@
+/* Windows 95 counterpart to the light and dark iframe stylesheets, used when the
+   host page is in win95 mode. Matches the gray .pay-container surface (#c0c0c0)
+   so the wallet button gap blends with the retro panel behind it. */
+
+html,
+body {
+  background: #c0c0c0 !important;
+  color: #000000 !important;
+}

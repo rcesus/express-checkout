@@ -32,6 +32,89 @@
   background: var(--panel);
 }
 
+/* Windows 95 mode. Teal desktop, gray beveled panels, sunken white inputs, and
+   raised gray buttons, built from box-shadow bevels in the classic light/dark
+   pairs. Set apart from the two real themes; it's a novelty skin. */
+:root[data-theme="win95"] {
+  --bg: #008080;
+  --panel: #c0c0c0;
+  --panel-2: #c0c0c0;
+  --border: #808080;
+  --text: #000000;
+  --muted: #202020;
+  --accent: #000080;
+  --accent-hover: #000060;
+  --danger: #a80000;
+  --success: #006000;
+  --radius: 0;
+}
+
+:root[data-theme="win95"] body {
+  font-family: "MS Sans Serif", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Square every corner off. */
+:root[data-theme="win95"] * {
+  border-radius: 0 !important;
+}
+
+/* Raised gray panels. */
+:root[data-theme="win95"] .card,
+:root[data-theme="win95"] .modal {
+  background: #c0c0c0;
+  border: none;
+  box-shadow:
+    inset -1px -1px 0 0 #000000,
+    inset 1px 1px 0 0 #ffffff,
+    inset -2px -2px 0 0 #808080,
+    inset 2px 2px 0 0 #dfdfdf;
+}
+
+/* Navy title bar on the settings modal. */
+:root[data-theme="win95"] .modal h2 {
+  margin: -24px -24px 16px;
+  padding: 3px 8px;
+  background: #000080;
+  color: #ffffff;
+}
+
+/* Raised gray buttons; pressed state inverts the bevel. */
+:root[data-theme="win95"] .btn,
+:root[data-theme="win95"] .gear,
+:root[data-theme="win95"] .modal-tab {
+  background: #c0c0c0 !important;
+  color: #000000 !important;
+  border: none !important;
+  box-shadow:
+    inset -1px -1px 0 0 #000000,
+    inset 1px 1px 0 0 #ffffff,
+    inset -2px -2px 0 0 #808080,
+    inset 2px 2px 0 0 #dfdfdf;
+}
+
+:root[data-theme="win95"] .btn:active:not(:disabled),
+:root[data-theme="win95"] .gear:active:not(:disabled),
+:root[data-theme="win95"] .modal-tab.active {
+  box-shadow:
+    inset 1px 1px 0 0 #000000,
+    inset -1px -1px 0 0 #ffffff,
+    inset 2px 2px 0 0 #808080,
+    inset -2px -2px 0 0 #dfdfdf;
+}
+
+/* Sunken white inputs. */
+:root[data-theme="win95"] input,
+:root[data-theme="win95"] select {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: none !important;
+  box-shadow:
+    inset 1px 1px 0 0 #808080,
+    inset -1px -1px 0 0 #ffffff,
+    inset 2px 2px 0 0 #000000,
+    inset -2px -2px 0 0 #dfdfdf;
+}
+
 * {
   box-sizing: border-box;
 }
