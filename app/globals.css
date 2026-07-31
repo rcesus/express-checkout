@@ -215,6 +215,14 @@
     inset 2px 2px 0 0 #dfdfdf;
 }
 
+/* The column scrolls, so pin its title bar the way a real window keeps its
+   caption while the contents move. */
+:root[data-theme="win95"] .window-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
 :root[data-theme="win95"] .right-col .card {
   background: transparent;
   box-shadow: none;
@@ -378,10 +386,15 @@ h2 {
   font-weight: 600;
 }
 
+/* Fixed-height app shell: the page itself never scrolls, so each column scrolls
+   on its own and the console is always fully in view. */
 .page {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 32px 20px 64px;
+  padding: 20px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .topbar {
@@ -439,19 +452,35 @@ h2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
-  align-items: start;
+  flex: 1;
+  min-height: 0;
 }
 
-/* The form and the mounted component share the right column, stacked. */
+/* The form and the mounted component share the right column, stacked, and the
+   column takes the overflow so the page stays put. */
 .right-col {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-height: 0;
+  overflow-y: auto;
 }
 
+/* One column on narrow screens, where a viewport-height shell would leave the
+   console and the form fighting over a few hundred pixels. Page scrolls again. */
 @media (max-width: 720px) {
   .grid {
     grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .page {
+    height: auto;
+    padding-bottom: 64px;
+  }
+
+  .right-col {
+    overflow-y: visible;
   }
 }
 
@@ -462,14 +491,22 @@ h2 {
   padding: 24px;
 }
 
+/* Fills its grid column and scrolls internally, so it never runs past the fold
+   and the page never has to scroll to reach it. */
 .console {
   padding: 0;
   overflow: hidden;
-  position: sticky;
-  top: 20px;
-  max-height: calc(100vh - 40px);
+  height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+}
+
+@media (max-width: 720px) {
+  .console {
+    height: auto;
+    max-height: 70vh;
+  }
 }
 
 .console-head {
