@@ -403,9 +403,12 @@ export default function Home() {
       rootContainer: CONTAINER_ID,
       token: settings.publicToken,
       entryPoint: settings.entryPoint,
-      // Custom stylesheet applied inside the checkout iframe. Absolute URL so
-      // the iframe can fetch it on whatever domain this deploys to.
-      customCssUrl: `${window.location.origin}/express-checkout.css`,
+      // Custom stylesheet applied inside the checkout iframe, picked by theme so
+      // the iframe background matches the host in light or dark mode. Absolute
+      // URL so the iframe can fetch it on whatever domain this deploys to. The
+      // theme is fixed at mount; toggling after the component renders doesn't
+      // restyle the live iframe.
+      customCssUrl: `${window.location.origin}/express-checkout-${theme}.css`,
       expressCheckout,
       // includeDetails is a sibling of expressCheckout, not a field inside it,
       // and it only applies to one-time. The component ignores it otherwise.

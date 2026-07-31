@@ -1,0 +1,11 @@
+/* Light-mode counterpart to express-checkout-dark.css, used when the host page
+   is in light mode. Matches the light .pay-container surface (--panel-2,
+   #e4e9ef) so the wallet button gap blends in light mode, with dark text.
+   Hardcoded like the dark file and must track --panel-2 / --text in
+   globals.css. */
+
+html,
+body {
+  background: #e4e9ef !important;
+  color: #14181d !important;
+}

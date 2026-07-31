@@ -1,0 +1,14 @@
+/* Applied inside the Payabli ExpressCheckout iframe via customCssUrl when the
+   host page is in dark mode. Repaints the iframe document to match the dark
+   .pay-container surface (--panel-2, #1c232d) so the gap between the wallet
+   buttons blends with the container behind it instead of showing the iframe's
+   own white paint. renderComponent picks the light or dark file by the current
+   theme; this file is static and can't read the host theme, so the color is
+   hardcoded and must track --panel-2 in globals.css. Wallet button appearance
+   is driven only by buttonStyle in the component config, never here. */
+
+html,
+body {
+  background: #1c232d !important;
+  color: #e6edf3 !important;
+}
