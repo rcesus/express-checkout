@@ -9,6 +9,7 @@ import {
   GOOGLE_PAY_LANGUAGES,
   SUPPORTED_NETWORKS,
   COLUMN_OPTIONS,
+  CURRENCY_OPTIONS,
   SHIPPING_CONTACT_FIELDS,
   INVOICE_TYPE_OPTIONS,
   INVOICE_STATUS_OPTIONS,
@@ -370,19 +371,18 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
                   onChange={(e) => patch({ fee: e.target.value })}
                 />
               </label>
-              <label>
-                Currency
-                <input
-                  type="text"
-                  value={checkout.currency}
-                  onChange={(e) => patch({ currency: e.target.value })}
-                />
-              </label>
-              <p className="modal-note">
-                {isTokenization
-                  ? "Tokenization sends amount and fee but the component ignores them. The charge amount and schedule live on the main page."
-                  : "The charge amount and the autopay schedule live on the main page form."}
-              </p>
+              <label>Currency</label>
+              {CURRENCY_OPTIONS.map((o) => (
+                <label className="radio" key={o.value}>
+                  <input
+                    type="radio"
+                    name="currency"
+                    checked={checkout.currency === o.value}
+                    onChange={() => patch({ currency: o.value })}
+                  />
+                  {o.label}
+                </label>
+              ))}
             </fieldset>
 
             {isOneTime && (
@@ -406,28 +406,6 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
                     <option value="true">True</option>
                     <option value="false">False</option>
                   </select>
-                </label>
-              </fieldset>
-            )}
-
-            {isAutopay && (
-              <fieldset className="end-mode">
-                <legend>Autopay customer identifier</legend>
-                <label className="radio">
-                  <input
-                    type="checkbox"
-                    checked={checkout.useCustomerId}
-                    onChange={(e) => patch({ useCustomerId: e.target.checked })}
-                  />
-                  Send as customerId instead of customerNumber
-                </label>
-                <label>
-                  Customer ID (experimental)
-                  <input
-                    type="text"
-                    value={checkout.customerId}
-                    onChange={(e) => patch({ customerId: e.target.value })}
-                  />
                 </label>
               </fieldset>
             )}

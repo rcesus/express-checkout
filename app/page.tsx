@@ -303,7 +303,7 @@ export default function Home() {
   const isAutopay = settings.checkout.paymentMode === "autopay";
   const isTokenization = settings.checkout.paymentMode === "tokenization";
 
-  function renderComponent(customerNumber?: string) {
+  function renderComponent(customerId?: string) {
     const container = document.getElementById(CONTAINER_ID);
     if (container) container.innerHTML = "";
 
@@ -389,11 +389,9 @@ export default function Home() {
         ? { includeDetails: settings.checkout.includeDetails === "true" }
         : {}),
       customerData: {
-        ...(customerNumber
-          ? settings.checkout.useCustomerId
-            ? { customerId: customerNumber }
-            : { customerNumber }
-          : {}),
+        // ExpressCheckout identifies the customer by customerId; it has no
+        // customerNumber support.
+        ...(customerId ? { customerId } : {}),
         firstName: selectedCustomer?.firstName ?? "",
         lastName: selectedCustomer?.lastName ?? "",
         billingEmail: selectedCustomer?.email ?? "",
@@ -413,11 +411,17 @@ export default function Home() {
         paymentMethod?: string;
       }) => {
         const ref = data?.data?.responseData?.referenceId;
-        const label = isOneTime
-          ? "Payment complete"
-          : isTokenization
-            ? "Payment method saved"
-            : "Subscription created";
+        // Tokenization's only meaningful output is the saved-method token, so
+        // surface that and nothing else.
+        if (isTokenization) {
+          pushLog("response", "Token generated", data?.data?.responseData ?? data);
+          setResult({
+            ok: true,
+            message: ref ? `Payment method saved. Token ${ref}.` : "Payment method saved.",
+          });
+          return;
+        }
+        const label = isOneTime ? "Payment complete" : "Subscription created";
         pushLog("event", "functionCallBackSuccess", data);
         setResult({
           ok: true,
@@ -444,27 +448,29 @@ export default function Home() {
       ...config,
       token: maskToken(settings.publicToken),
     });
-    // Make the boundary explicit. The wallet charge runs inside the Payabli
-    // iframe, cross-origin, so this page doesn't make that call itself. But its
-    // immediate approve/decline DOES come back through the success/error
-    // callbacks below (that reference ID is the transaction). What the page
-    // can't see is what happens afterward server-side, which is what the webhook
-    // note covers.
-    pushLog(
-      "note",
-      "The wallet charge runs inside the Payabli iframe (cross-origin), so this page doesn't make that call. Its immediate approve or decline does come back, through functionCallBackSuccess / functionCallBackError below (the reference ID is the transaction). What the page can't see is what happens after: settlement, funding, and any future recurring charge run on Payabli's schedule with no browser session attached. Those reach you only through webhooks.",
-    );
-    // Per-mode webhook recommendation. Autopay's recurring charges fire later on
-    // Payabli's schedule, so the page will never see them; one-time only needs
-    // the charge result plus the money-movement follow-ups.
-    pushLog(
-      "note",
-      isOneTime
-        ? "Recommended webhooks for one-time: ApprovedPayment / DeclinedPayment for the charge result, then SettledPayment and FundedPayment to follow the money into your account."
-        : isTokenization
-          ? "Tokenization saves the method through /TokenStorage/add and returns the token inline via functionCallBackSuccess. No charge runs, so no payment or funding webhooks fire for this step; watch for them when you later charge the saved method."
+    // The payment modes get a boundary note plus a webhook recommendation.
+    // Tokenization surfaces only the generated token, so it skips both.
+    if (!isTokenization) {
+      // Make the boundary explicit. The wallet charge runs inside the Payabli
+      // iframe, cross-origin, so this page doesn't make that call itself. But its
+      // immediate approve/decline DOES come back through the success/error
+      // callbacks below (that reference ID is the transaction). What the page
+      // can't see is what happens afterward server-side, which is what the webhook
+      // note covers.
+      pushLog(
+        "note",
+        "The wallet charge runs inside the Payabli iframe (cross-origin), so this page doesn't make that call. Its immediate approve or decline does come back, through functionCallBackSuccess / functionCallBackError below (the reference ID is the transaction). What the page can't see is what happens after: settlement, funding, and any future recurring charge run on Payabli's schedule with no browser session attached. Those reach you only through webhooks.",
+      );
+      // Per-mode webhook recommendation. Autopay's recurring charges fire later on
+      // Payabli's schedule, so the page will never see them; one-time only needs
+      // the charge result plus the money-movement follow-ups.
+      pushLog(
+        "note",
+        isOneTime
+          ? "Recommended webhooks for one-time: ApprovedPayment / DeclinedPayment for the charge result, then SettledPayment and FundedPayment to follow the money into your account."
           : "Recommended webhooks for autopay: SubscriptionCreated to confirm the schedule, ApprovedPayment / DeclinedPayment on each recurring charge for the firing and its result (matched to the subscription by the transaction's ScheduleReference), and SubscriptionCompleted when it passes its end date.",
-    );
+      );
+    }
 
     // Cover the container so the iframe's own white first paint never shows.
     setCovering(true);

@@ -74,6 +74,11 @@ export const COLUMN_OPTIONS: Option[] = [
   { value: "2", label: "Horizontal" },
 ];
 
+export const CURRENCY_OPTIONS: Option[] = [
+  { value: "USD", label: "USD" },
+  { value: "CAD", label: "CAD" },
+];
+
 export const SHIPPING_CONTACT_FIELDS: Option[] = [
   { value: "name", label: "Name" },
   { value: "postalAddress", label: "Postal Address" },
@@ -157,11 +162,6 @@ export interface CheckoutConfig {
   // one_time charges once; autopay sets up a recurring subscription. Autopay is
   // the only mode that uses the frequency/start-date/end controls on the form.
   paymentMode: PaymentMode;
-  // Autopay only. Sends the id from POST /api/customer under customerData.customerId
-  // instead of customerData.customerNumber. The ExpressCheckout guide documents
-  // neither key, so this is here to find out what the component actually does with
-  // customerId: identify the existing record, or ignore it and match on name/email.
-  useCustomerId: boolean;
   applePayEnabled: boolean;
   applePayCrossBrowser: boolean;
   applePayButtonStyle: string;
@@ -194,15 +194,10 @@ export interface CheckoutConfig {
   applePayLanguage: string;
   googlePayLanguage: string;
   requiredShippingContactFields: string[];
-  // Experimental. Targets the same customerData.customerId key as
-  // useCustomerId's real flow, so it only applies when that toggle is off.
-  // Here purely to see whether the component/API accepts or ignores it.
-  customerId: string;
 }
 
 export const DEFAULT_CHECKOUT: CheckoutConfig = {
   paymentMode: "autopay",
-  useCustomerId: false,
   applePayEnabled: true,
   applePayCrossBrowser: true,
   applePayButtonStyle: "black",
@@ -237,7 +232,6 @@ export const DEFAULT_CHECKOUT: CheckoutConfig = {
   applePayLanguage: "en-US",
   googlePayLanguage: "en",
   requiredShippingContactFields: [],
-  customerId: "12345",
 };
 
 // Date-based, incrementing invoice number: INV-YYYYMMDD-NN. The suffix comes
