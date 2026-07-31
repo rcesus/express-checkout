@@ -780,7 +780,7 @@ export default function Home() {
                     onClick={cancelCreate}
                     disabled={createBusy}
                   >
-                    Cancel
+                    Back to search
                   </button>
                 </div>
               </div>
