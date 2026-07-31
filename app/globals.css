@@ -70,12 +70,19 @@
     inset 2px 2px 0 0 #dfdfdf;
 }
 
-/* Navy title bar on the settings modal. */
+/* Gradient title bar on the settings modal, classic active-window style. */
 :root[data-theme="win95"] .modal h2 {
   margin: -24px -24px 16px;
   padding: 3px 8px;
-  background: #000080;
+  background: linear-gradient(to right, #000080, #1084d0);
   color: #ffffff;
+  font-weight: bold;
+}
+
+/* Win95 hyperlinks: underlined blue, purple when visited. */
+:root[data-theme="win95"] .link-btn {
+  color: #0000ff;
+  text-decoration: underline;
 }
 
 /* Raised gray buttons; pressed state inverts the bevel. */
@@ -178,6 +185,22 @@ h2 {
 .gear:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* The four-pane Windows flag on the win95 theme button, painted as four skewed
+   color quadrants with a small center gutter. Shows in every theme since it's
+   the button's identity. */
+.win95-logo {
+  display: inline-block;
+  width: 17px;
+  height: 15px;
+  vertical-align: middle;
+  transform: skewX(-9deg);
+  background:
+    linear-gradient(#f34f4f, #f34f4f) left top / 45% 45% no-repeat,
+    linear-gradient(#4fc04f, #4fc04f) right top / 45% 45% no-repeat,
+    linear-gradient(#4f8ff3, #4f8ff3) left bottom / 45% 45% no-repeat,
+    linear-gradient(#f3c34f, #f3c34f) right bottom / 45% 45% no-repeat;
 }
 
 .grid {

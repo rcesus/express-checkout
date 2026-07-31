@@ -621,7 +621,7 @@ export default function Home() {
             }
             onClick={() => applyTheme(theme === "win95" ? "dark" : "win95")}
           >
-            95
+            <span className="win95-logo" aria-hidden="true" />
           </button>
           <button
             className="gear"
