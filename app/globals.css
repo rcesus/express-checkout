@@ -62,6 +62,8 @@
 :root[data-theme="win95"] .radio,
 :root[data-theme="win95"] .customer-label,
 :root[data-theme="win95"] .customer-line,
+:root[data-theme="win95"] .slider-label,
+:root[data-theme="win95"] .slider-value,
 :root[data-theme="win95"] .console-title,
 :root[data-theme="win95"] .console-empty,
 :root[data-theme="win95"] .log-label,
@@ -358,8 +360,11 @@
 :root[data-theme="win95"] .slider input[type="range"] {
   appearance: none;
   -webkit-appearance: none;
-  /* Tall enough that the 21px thumb isn't clipped at either end of the track. */
-  height: 21px;
+  /* Tall enough that the thumb isn't clipped at either end of the track. */
+  height: 17px;
+  /* Tighter than the app's 8px, so the control sits as close to its label as the
+     modal's other fields do. */
+  margin: 4px 0 2px;
   background: transparent !important;
   box-shadow: none !important;
   /* Nothing left for the native tint to color once both parts are drawn. */
@@ -386,15 +391,17 @@
     inset -2px -2px 0 0 #dfdfdf;
 }
 
-/* 11 by 21, the era's proportions. Chrome anchors the thumb's top edge to the
-   track, so it needs half the difference back as a negative margin to straddle
-   the groove; Firefox centers it already. */
+/* 11 by 17. The era's full-size trackbar thumb was 21 tall, which stood taller
+   than the 19px fields next to it in this dialog, so it comes down to the height
+   of an input. Chrome anchors the thumb's top edge to the track, so it needs half
+   the difference back as a negative margin to straddle the groove; Firefox
+   centers it already. */
 :root[data-theme="win95"] .slider input[type="range"]::-webkit-slider-thumb {
   appearance: none;
   -webkit-appearance: none;
   width: 11px;
-  height: 21px;
-  margin-top: -9px;
+  height: 17px;
+  margin-top: -7px;
   background: #c0c0c0;
   border: none;
   /* The theme-wide corner reset is on *, which never matches a pseudo-element,
@@ -409,7 +416,7 @@
 
 :root[data-theme="win95"] .slider input[type="range"]::-moz-range-thumb {
   width: 11px;
-  height: 21px;
+  height: 17px;
   background: #c0c0c0;
   border: none;
   border-radius: 0;
