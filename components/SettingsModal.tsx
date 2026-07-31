@@ -296,6 +296,8 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
           </button>
         </div>
 
+        {/* Panel the tabs sit on. Only the win95 theme frames it. */}
+        <div className="modal-panel">
         {tab === "connection" && (
           <>
             <label>
@@ -640,6 +642,7 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
             </fieldset>
           </>
         )}
+        </div>
 
         {error && <p className="error-text">{error}</p>}
 

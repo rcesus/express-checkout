@@ -87,8 +87,7 @@
 
 /* Raised gray buttons; pressed state inverts the bevel. */
 :root[data-theme="win95"] .btn,
-:root[data-theme="win95"] .gear,
-:root[data-theme="win95"] .modal-tab {
+:root[data-theme="win95"] .gear {
   background: #c0c0c0 !important;
   color: #000000 !important;
   border: none !important;
@@ -100,13 +99,55 @@
 }
 
 :root[data-theme="win95"] .btn:active:not(:disabled),
-:root[data-theme="win95"] .gear:active:not(:disabled),
-:root[data-theme="win95"] .modal-tab.active {
+:root[data-theme="win95"] .gear:active:not(:disabled) {
   box-shadow:
     inset 1px 1px 0 0 #000000,
     inset -1px -1px 0 0 #ffffff,
     inset 2px 2px 0 0 #808080,
     inset -2px -2px 0 0 #dfdfdf;
+}
+
+/* Property-sheet tabs. Each tab is open at the bottom, and the selected one
+   sits a pixel lower so it merges into the panel it belongs to. */
+:root[data-theme="win95"] .modal-tabs {
+  position: relative;
+  z-index: 1;
+  gap: 0;
+  align-items: flex-end;
+  margin-bottom: 0;
+  padding-left: 2px;
+  border-bottom: none;
+}
+
+:root[data-theme="win95"] .modal-tab {
+  margin: 0 1px 0 0;
+  padding: 3px 8px 4px;
+  background: #c0c0c0;
+  color: #000000;
+  font-size: 0.72rem;
+  border-top: 1px solid #ffffff;
+  border-left: 1px solid #ffffff;
+  border-right: 1px solid #000000;
+  border-bottom: none;
+  box-shadow: inset -1px 0 0 0 #808080;
+}
+
+:root[data-theme="win95"] .modal-tab.active {
+  z-index: 2;
+  margin: -2px 1px -2px -2px;
+  padding: 5px 10px 6px;
+}
+
+/* The panel the selected tab opens onto. */
+:root[data-theme="win95"] .modal-panel {
+  margin-bottom: 16px;
+  padding: 14px 12px;
+  background: #c0c0c0;
+  border-top: 1px solid #ffffff;
+  border-left: 1px solid #ffffff;
+  border-right: 1px solid #000000;
+  border-bottom: 1px solid #000000;
+  box-shadow: inset -1px -1px 0 0 #808080;
 }
 
 /* Sunken white inputs. Checkboxes and radios are drawn separately below. */
