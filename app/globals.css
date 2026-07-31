@@ -85,7 +85,13 @@
   text-decoration: underline;
 }
 
-/* Raised gray buttons; pressed state inverts the bevel. */
+/* Raised gray buttons; pressed state inverts the bevel. The era's buttons were
+   about 23px tall, so they shed the shared padding along with the inputs. */
+:root[data-theme="win95"] .btn {
+  padding: 4px 12px;
+  font-size: 0.8rem;
+}
+
 :root[data-theme="win95"] .btn,
 :root[data-theme="win95"] .gear {
   background: #c0c0c0 !important;
@@ -153,6 +159,8 @@
 /* Sunken white inputs. Checkboxes and radios are drawn separately below. */
 :root[data-theme="win95"] input:not([type="checkbox"]):not([type="radio"]),
 :root[data-theme="win95"] select {
+  padding: 3px 5px;
+  font-size: 0.8rem;
   background: #ffffff !important;
   color: #000000 !important;
   border: none !important;
@@ -161,13 +169,6 @@
     inset -1px -1px 0 0 #ffffff,
     inset 2px 2px 0 0 #000000,
     inset -2px -2px 0 0 #dfdfdf;
-}
-
-/* Combo boxes were about 21px tall in the original, not the 44px the shared
-   input padding gives them. */
-:root[data-theme="win95"] select {
-  padding: 2px 4px;
-  font-size: 0.8rem;
 }
 
 /* Win95 checkboxes and radios: 13px sunken white wells, a black check glyph or
