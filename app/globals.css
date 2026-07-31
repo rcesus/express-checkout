@@ -109,8 +109,8 @@
     inset -2px -2px 0 0 #dfdfdf;
 }
 
-/* Sunken white inputs. */
-:root[data-theme="win95"] input,
+/* Sunken white inputs. Checkboxes and radios are drawn separately below. */
+:root[data-theme="win95"] input:not([type="checkbox"]):not([type="radio"]),
 :root[data-theme="win95"] select {
   background: #ffffff !important;
   color: #000000 !important;
@@ -120,6 +120,61 @@
     inset -1px -1px 0 0 #ffffff,
     inset 2px 2px 0 0 #000000,
     inset -2px -2px 0 0 #dfdfdf;
+}
+
+/* Win95 checkboxes and radios: 13px sunken white wells, a black check glyph or
+   a center dot when set. The radio overrides the theme-wide border-radius reset
+   because these were the one round control in the era. */
+:root[data-theme="win95"] input[type="checkbox"],
+:root[data-theme="win95"] input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  flex-shrink: 0;
+  width: 13px;
+  height: 13px;
+  background: #ffffff;
+  border: none;
+  cursor: pointer;
+  box-shadow:
+    inset 1px 1px 0 0 #808080,
+    inset -1px -1px 0 0 #ffffff,
+    inset 2px 2px 0 0 #000000,
+    inset -2px -2px 0 0 #dfdfdf;
+}
+
+:root[data-theme="win95"] input[type="radio"] {
+  border-radius: 50% !important;
+}
+
+:root[data-theme="win95"] input[type="checkbox"]:checked::after {
+  content: "✔";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000000;
+  font-size: 9px;
+  line-height: 1;
+}
+
+:root[data-theme="win95"] input[type="radio"]:checked::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50% !important;
+  background: #000000;
+}
+
+/* Focus is the era's dotted rectangle rather than a glow. */
+:root[data-theme="win95"] input[type="checkbox"]:focus-visible,
+:root[data-theme="win95"] input[type="radio"]:focus-visible {
+  outline: 1px dotted #000000;
+  outline-offset: 2px;
 }
 
 /* The console as a Win95 application window: navy title bar with control
