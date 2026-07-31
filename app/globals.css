@@ -163,6 +163,13 @@
     inset -2px -2px 0 0 #dfdfdf;
 }
 
+/* Combo boxes were about 21px tall in the original, not the 44px the shared
+   input padding gives them. */
+:root[data-theme="win95"] select {
+  padding: 2px 4px;
+  font-size: 0.8rem;
+}
+
 /* Win95 checkboxes and radios: 13px sunken white wells, a black check glyph or
    a center dot when set. The radio overrides the theme-wide border-radius reset
    because these were the one round control in the era. */
