@@ -647,11 +647,11 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
         {error && <p className="error-text">{error}</p>}
 
         <div className="modal-actions">
-          <button className="btn secondary" onClick={onClose} disabled={saving}>
-            Cancel
-          </button>
           <button className="btn primary" onClick={handleSave} disabled={saving}>
             {saving ? "Saving..." : "Save"}
+          </button>
+          <button className="btn secondary" onClick={onClose} disabled={saving}>
+            Cancel
           </button>
         </div>
       </div>
