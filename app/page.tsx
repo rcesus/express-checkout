@@ -199,6 +199,21 @@ export default function Home() {
     setError("");
   }
 
+  // Tear down a finished run so the next one starts clean. A page reload would
+  // do it too, but the entrypoint and public token are memory-only and would
+  // have to be re-entered. The selected customer stays so another mode can run
+  // against the same record without searching for it again.
+  function resetRun() {
+    setActive(false);
+    setResult(null);
+    setError("");
+    setCovering(false);
+    setLogs([]);
+    setAmount("");
+    const el = document.getElementById(CONTAINER_ID);
+    if (el) el.innerHTML = "";
+  }
+
   async function runSearch() {
     setSearchError("");
     if (!settings.entryPoint) {
@@ -600,6 +615,16 @@ export default function Home() {
       <header className="topbar">
         <div />
         <div className="topbar-actions">
+          <button
+            className="gear"
+            aria-label="Start a new run"
+            // Nothing to tear down until a run has produced something.
+            disabled={busy || (!active && !logs.length)}
+            title="Start a new run (keeps the customer and your settings)"
+            onClick={resetRun}
+          >
+            ↻
+          </button>
           <button
             className="gear"
             aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
