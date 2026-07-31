@@ -53,6 +53,28 @@
   font-family: "MS Sans Serif", Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* UI text ran 11.5 to 14px off the app's rem scale. Win95 labeled everything at
+   11px, so the text-bearing classes are pinned there. Sizes on the controls
+   themselves are left alone. */
+:root[data-theme="win95"] body,
+:root[data-theme="win95"] label,
+:root[data-theme="win95"] legend,
+:root[data-theme="win95"] .radio,
+:root[data-theme="win95"] .customer-label,
+:root[data-theme="win95"] .customer-line,
+:root[data-theme="win95"] .console-title,
+:root[data-theme="win95"] .console-empty,
+:root[data-theme="win95"] .log-label,
+:root[data-theme="win95"] .hint {
+  font-size: 11px;
+}
+
+/* Console text in a console face. Fixedsys is not a web font, and Lucida
+   Console ships on Windows. */
+:root[data-theme="win95"] .console-body {
+  font-family: "Lucida Console", "Courier New", monospace;
+}
+
 /* Square every corner off. */
 :root[data-theme="win95"] * {
   border-radius: 0 !important;
