@@ -104,6 +104,12 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  /* A property sheet is one size whichever tab is open, so the dialog is fixed
+     rather than sized to its content. The panel takes the slack: it grows into
+     the leftover space on a short tab and scrolls on a long one. Width was
+     already fixed by max-width; only the height moved. The base max-height still
+     applies, so a short viewport wins over this. */
+  height: 520px;
 }
 
 /* Gradient caption bar, classic active-window style. The heading is the bar, so
