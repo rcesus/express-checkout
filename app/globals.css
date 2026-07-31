@@ -15,14 +15,21 @@
 /* Light palette. Dark is the base above; this overrides only when the document
    carries data-theme="light". Accent and radius are shared, so they stay. */
 :root[data-theme="light"] {
-  --bg: #f6f8fa;
+  --bg: #eef1f5;
   --panel: #ffffff;
-  --panel-2: #eef1f5;
-  --border: #d6dde5;
-  --text: #1c2128;
-  --muted: #5a6672;
+  --panel-2: #e4e9ef;
+  --border: #d0d7e0;
+  --text: #14181d;
+  --muted: #3f4753;
   --danger: #d64545;
   --success: #2fa25a;
+}
+
+/* The customer box uses --panel-2 for a subtle raised look in dark mode. On the
+   white light theme that inset gray reads as bleed-through, so match it to the
+   card surface and let the border carry the separation. */
+:root[data-theme="light"] .customer-card {
+  background: var(--panel);
 }
 
 * {

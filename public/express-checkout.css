@@ -1,20 +1,18 @@
 /* Applied inside the Payabli ExpressCheckout iframe via customCssUrl.
-   Goal: repaint the iframe's own white document background to match the
-   dark wallet-checkout card (--panel #161b22) so the two read as one
-   continuous dark surface. Selectors are a first pass; refine against the
-   live iframe DOM once mounted. */
+   Goal: make the iframe's own document background transparent so the host
+   .pay-container behind it shows through the gaps between the wallet buttons.
+   That keeps the button gap matching the container in both light and dark mode,
+   since this static file can't read the host theme. The parent overlay
+   (.pay-overlay) already hides the iframe's white first paint during load. */
 
 html,
 body {
-  background: #161b22 !important;
-  color: #e6edf3 !important;
+  background: transparent !important;
 }
 
-/* Only the body repaint runs here. An earlier pass also forced inner wrappers
-   transparent to hide the iframe's white first paint, but the parent overlay
-   (.pay-overlay) already covers that flash, and those wildcard rules reached
-   the Google Pay button's fill. On the dark button that was invisible; on the
-   light (white) button it knocked out the white surface and let the dark body
-   show through, so "light" always looked dark. Wallet button appearance is
-   driven only by buttonStyle in the component config, never by this stylesheet,
-   so nothing here touches the button. */
+/* Only the body background is touched. An earlier pass also forced inner
+   wrappers transparent to hide the white first paint, but that reached the
+   Google Pay button's fill and knocked out the white button surface, so "light"
+   always looked dark. Wallet button appearance is driven only by buttonStyle in
+   the component config, never by this stylesheet, so nothing here touches the
+   button. */
