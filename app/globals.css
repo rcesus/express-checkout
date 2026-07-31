@@ -159,8 +159,6 @@
 /* Sunken white inputs. Checkboxes and radios are drawn separately below. */
 :root[data-theme="win95"] input:not([type="checkbox"]):not([type="radio"]),
 :root[data-theme="win95"] select {
-  padding: 3px 5px;
-  font-size: 0.8rem;
   background: #ffffff !important;
   color: #000000 !important;
   border: none !important;
@@ -169,6 +167,13 @@
     inset -1px -1px 0 0 #ffffff,
     inset 2px 2px 0 0 #000000,
     inset -2px -2px 0 0 #dfdfdf;
+}
+
+/* Only the dropdowns take the tighter era height. Text inputs keep the app's
+   own padding. */
+:root[data-theme="win95"] select {
+  padding: 3px 5px;
+  font-size: 0.8rem;
 }
 
 /* Win95 checkboxes and radios: 13px sunken white wells, a black check glyph or
