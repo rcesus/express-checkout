@@ -293,6 +293,12 @@
   box-shadow: none;
 }
 
+/* The create dialog carries its own caption, so drop the block's label while
+   it is open. */
+:root[data-theme="win95"] .customer-card:has(.customer-form) .customer-label {
+  display: none;
+}
+
 /* Creating a customer is its own dialog: raised frame, caption bar, fields
    inset from the edges. */
 :root[data-theme="win95"] .customer-form {
