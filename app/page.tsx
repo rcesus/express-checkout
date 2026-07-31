@@ -549,8 +549,11 @@ export default function Home() {
   }
 
   const amountValue = useMemo(() => {
+    // A blank box falls back to the persona default. A typed value, including 0,
+    // is used as-is (tokenization ignores it; the component validates the rest).
+    if (amount.trim() === "") return persona.amount;
     const parsed = parseFloat(amount);
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : persona.amount;
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : persona.amount;
   }, [amount, persona.amount]);
 
   return (
