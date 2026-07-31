@@ -92,11 +92,18 @@
     inset 2px 2px 0 0 #dfdfdf;
 }
 
-/* The modal as a Win95 dialog, the same anatomy as the console window. The
-   app's 24px padding is dialog-sized here instead, which is also what lets the
-   caption bar sit 3px inside the frame the way the console's does. */
+/* The modal as a Win95 dialog, the same anatomy as the console window. The app's
+   24px padding is dialog-sized here instead, which is also what lets the caption
+   bar sit 3px inside the frame the way the console's does. Laid out as a column
+   so the caption, the tab row and the buttons hold their places and only the
+   panel between them scrolls. The dialog itself stops scrolling for that to
+   work: a scroll container on the modal carries its own chrome off with the
+   content. */
 :root[data-theme="win95"] .modal {
   padding: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* Gradient caption bar, classic active-window style. The heading is the bar, so
@@ -192,8 +199,13 @@
   padding: 5px 8px 6px;
 }
 
-/* The panel the selected tab opens onto. */
+/* The panel the selected tab opens onto, and the only part of the dialog that
+   scrolls. A flex item's floor is its own content, so without min-height it
+   would push the dialog past its max height rather than scroll inside it. */
 :root[data-theme="win95"] .modal-panel {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   margin-bottom: 16px;
   padding: 14px 12px;
   background: #c0c0c0;
@@ -619,21 +631,26 @@
   box-shadow: none;
 }
 
-/* Chunky gray scrollbar with a raised thumb. */
-:root[data-theme="win95"] .console-body {
+/* Chunky gray scrollbar with a raised thumb, on the console and on the one part
+   of the settings dialog that scrolls. */
+:root[data-theme="win95"] .console-body,
+:root[data-theme="win95"] .modal-panel {
   scrollbar-color: #c0c0c0 #dfdfdf;
 }
 
-:root[data-theme="win95"] .console-body::-webkit-scrollbar {
+:root[data-theme="win95"] .console-body::-webkit-scrollbar,
+:root[data-theme="win95"] .modal-panel::-webkit-scrollbar {
   width: 16px;
 }
 
-:root[data-theme="win95"] .console-body::-webkit-scrollbar-track {
+:root[data-theme="win95"] .console-body::-webkit-scrollbar-track,
+:root[data-theme="win95"] .modal-panel::-webkit-scrollbar-track {
   margin: 0;
   background: #dfdfdf;
 }
 
-:root[data-theme="win95"] .console-body::-webkit-scrollbar-thumb {
+:root[data-theme="win95"] .console-body::-webkit-scrollbar-thumb,
+:root[data-theme="win95"] .modal-panel::-webkit-scrollbar-thumb {
   border: none;
   background: #c0c0c0;
   background-clip: border-box;
