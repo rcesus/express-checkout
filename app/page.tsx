@@ -834,7 +834,7 @@ export default function Home() {
                 )}
                 <button
                   type="button"
-                  className="link-btn"
+                  className="btn secondary create-customer"
                   onClick={() => {
                     setCreating(true);
                     setSearchError("");

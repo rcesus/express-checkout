@@ -978,6 +978,12 @@ input[readonly] {
   cursor: not-allowed;
 }
 
+/* Sits under the search field or the result list, so it needs the gap the link
+   it replaced had. */
+.create-customer {
+  margin-top: 10px;
+}
+
 .btn.primary {
   background: var(--accent);
   color: #fff;
