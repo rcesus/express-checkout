@@ -9,6 +9,7 @@ const API_BASE = "https://api-sandbox.payabli.com/api";
 export async function POST(req: NextRequest) {
   let body: {
     entryPoint?: string;
+    customerNumber?: string;
     firstName?: string;
     lastName?: string;
     email?: string;
@@ -57,6 +58,8 @@ export async function POST(req: NextRequest) {
       idempotencyKey: randomUUID(),
     },
     body: JSON.stringify({
+      customerStatus: 1,
+      customerNumber: body.customerNumber?.trim() ?? "",
       firstname: body.firstName?.trim() ?? "",
       lastname: body.lastName?.trim() ?? "",
       email,

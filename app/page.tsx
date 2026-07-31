@@ -260,7 +260,10 @@ export default function Home() {
     }
     setCreateBusy(true);
     try {
-      const request = { entryPoint: settings.entryPoint, ...newCustomer };
+      // Random 10-digit customerNumber (first digit non-zero so it's a full 10
+      // digits). Sent on create so each demo record gets a distinct number.
+      const customerNumber = String(Math.floor(1000000000 + Math.random() * 9000000000));
+      const request = { entryPoint: settings.entryPoint, customerNumber, ...newCustomer };
       const res = await fetch("/api/customer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -277,6 +280,7 @@ export default function Home() {
       // Build the selected record from what was typed plus the returned id.
       selectCustomer({
         customerId: data.customerId,
+        customerNumber,
         firstName: newCustomer.firstName,
         lastName: newCustomer.lastName,
         email: newCustomer.email,
