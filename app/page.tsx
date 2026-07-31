@@ -654,14 +654,6 @@ export default function Home() {
                     onChange={setNewField("zip")}
                   />
                 </label>
-                <label>
-                  Country
-                  <input
-                    type="text"
-                    value={newCustomer.country}
-                    onChange={setNewField("country")}
-                  />
-                </label>
                 {createError && <p className="error-text">{createError}</p>}
                 <div className="form-actions">
                   <button
