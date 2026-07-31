@@ -647,7 +647,7 @@ export default function Home() {
             and the mounted component share a title bar. Other themes hide it
             and keep the two cards separate. */}
         <div className="window-head" aria-hidden="true">
-          <span className="console-title">Express Checkout</span>
+          <span className="console-title">Payabli Express Checkout Demo</span>
           <span className="console-controls">
             <span className="console-control">_</span>
             <span className="console-control">□</span>

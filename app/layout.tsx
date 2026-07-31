@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Payabli Component Demo",
+  title: "Payabli Express Checkout Demo",
   description:
     "ExpressCheckout sample app: recurring billing with Apple Pay and Google Pay across three verticals.",
 };
