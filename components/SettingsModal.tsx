@@ -255,7 +255,17 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h2>Settings</h2>
+        {/* The heading doubles as the win95 caption bar. The controls carry the
+            console's own classes, so they inherit its button styling and stay
+            hidden in the other themes. */}
+        <h2>
+          Settings
+          <span className="console-controls" aria-hidden="true">
+            <span className="console-control">_</span>
+            <span className="console-control">□</span>
+            <span className="console-control">✕</span>
+          </span>
+        </h2>
 
         <div className="modal-tabs" role="tablist">
           <button

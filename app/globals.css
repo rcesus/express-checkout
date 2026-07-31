@@ -92,12 +92,26 @@
     inset 2px 2px 0 0 #dfdfdf;
 }
 
-/* Gradient title bar on the settings modal, classic active-window style. */
+/* The modal as a Win95 dialog, the same anatomy as the console window. The
+   app's 24px padding is dialog-sized here instead, which is also what lets the
+   caption bar sit 3px inside the frame the way the console's does. */
+:root[data-theme="win95"] .modal {
+  padding: 8px;
+}
+
+/* Gradient caption bar, classic active-window style. The heading is the bar, so
+   it goes to 11px bold caption text and holds the control buttons at its right
+   end. The negative margins reach back through the dialog padding to leave the
+   3px gap the raised frame needs. */
 :root[data-theme="win95"] .modal h2 {
-  margin: -24px -24px 16px;
-  padding: 3px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: -5px -5px 8px;
+  padding: 2px 2px 2px 4px;
   background: linear-gradient(to right, #000080, #1084d0);
   color: #ffffff;
+  font-size: 11px;
   font-weight: bold;
 }
 
@@ -149,7 +163,14 @@
 
 :root[data-theme="win95"] .modal-tab {
   margin: 0 1px 0 0;
-  padding: 3px 8px 4px;
+  /* 6px, not 8. Four labels this long at 8px filled the row to within a pixel or
+     two of the modal width, so any growth in the selected tab pushed the last
+     one over and its label broke in half. */
+  padding: 3px 6px 4px;
+  /* A tab is one line, always. Flex would otherwise shrink the box and let the
+     label wrap rather than overflow. */
+  white-space: nowrap;
+  flex-shrink: 0;
   background: #c0c0c0;
   color: #000000;
   font-size: 0.72rem;
@@ -160,10 +181,15 @@
   box-shadow: inset -1px 0 0 0 #808080;
 }
 
+/* The selected tab grows 2px on every side. The negative margins take back
+   exactly what the padding adds, so the row is the same width whichever tab is
+   selected and switching tabs can't re-break the line. Growing sideways into the
+   neighbors is what the original did too, and z-index puts this one on top, so
+   it covers their dark right edge instead of being clipped by it. */
 :root[data-theme="win95"] .modal-tab.active {
   z-index: 2;
-  margin: -2px 1px -2px -2px;
-  padding: 5px 10px 6px;
+  margin: -2px -1px -2px -2px;
+  padding: 5px 8px 6px;
 }
 
 /* The panel the selected tab opens onto. */
@@ -178,8 +204,10 @@
   box-shadow: inset -1px -1px 0 0 #808080;
 }
 
-/* Sunken white inputs. Checkboxes and radios are drawn separately below. */
-:root[data-theme="win95"] input:not([type="checkbox"]):not([type="radio"]),
+/* Sunken white inputs. Checkboxes, radios and sliders are drawn separately
+   below; a slider is a groove and a thumb, not a white field. */
+:root[data-theme="win95"]
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
 :root[data-theme="win95"] select {
   background: #ffffff !important;
   color: #000000 !important;
@@ -203,6 +231,38 @@
   background-repeat: no-repeat !important;
   background-position: right 2px center !important;
   background-size: 16px 16px !important;
+}
+
+/* Group boxes. Every fieldset in the app uses .end-mode, so this covers the
+   modal's sections and the Ends block on the page. The era's frame is engraved
+   rather than raised: a gray line with white immediately inside it along the top
+   and left, inverted along the bottom and right, which reads as a groove cut
+   into the dialog face. Drawn as shadows, so the legend needs the dialog gray
+   behind it to break the line the way a bordered fieldset does on its own. */
+:root[data-theme="win95"] .end-mode {
+  padding: 10px 10px 6px;
+  border: none;
+  box-shadow:
+    inset 1px 1px 0 0 #808080,
+    inset -1px -1px 0 0 #ffffff,
+    inset 2px 2px 0 0 #ffffff,
+    inset -2px -2px 0 0 #808080;
+}
+
+:root[data-theme="win95"] .end-mode legend {
+  padding: 0 4px;
+  background: #c0c0c0;
+  color: #000000;
+}
+
+/* Inside the settings modal, text fields take the dropdowns' height: same
+   vertical padding and font size, so a field and a combo box read as one row of
+   controls. Scoped to the modal because the customer and amount fields on the
+   page keep the app's own sizing (0b80d7e). */
+:root[data-theme="win95"]
+  .modal input:not([type="checkbox"]):not([type="radio"]):not([type="range"]) {
+  padding: 3px 5px;
+  font-size: 0.8rem;
 }
 
 /* Win95 checkboxes and radios: 13px sunken white wells, a black check glyph or
@@ -264,6 +324,85 @@
 :root[data-theme="win95"] input[type="radio"]:focus-visible {
   outline: 1px dotted #000000;
   outline-offset: 2px;
+}
+
+/* Win95 trackbar. The native slider is a filled bar with a round thumb, which
+   is the one control that reads as modern even with the rest of the skin on. The
+   era's version was a thin sunken groove with a tall raised gray thumb riding
+   it, so both parts are drawn here. The groove is the same four-layer sunken
+   bevel as the text inputs, and the thumb the same raised bevel as the buttons.
+   Each engine needs its own pseudo-element and they can't be grouped: one
+   unknown selector drops the whole rule. */
+:root[data-theme="win95"] .slider input[type="range"] {
+  appearance: none;
+  -webkit-appearance: none;
+  /* Tall enough that the 21px thumb isn't clipped at either end of the track. */
+  height: 21px;
+  background: transparent !important;
+  box-shadow: none !important;
+  /* Nothing left for the native tint to color once both parts are drawn. */
+  accent-color: auto;
+}
+
+:root[data-theme="win95"] .slider input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  background: #c0c0c0;
+  box-shadow:
+    inset 1px 1px 0 0 #808080,
+    inset -1px -1px 0 0 #ffffff,
+    inset 2px 2px 0 0 #000000,
+    inset -2px -2px 0 0 #dfdfdf;
+}
+
+:root[data-theme="win95"] .slider input[type="range"]::-moz-range-track {
+  height: 4px;
+  background: #c0c0c0;
+  box-shadow:
+    inset 1px 1px 0 0 #808080,
+    inset -1px -1px 0 0 #ffffff,
+    inset 2px 2px 0 0 #000000,
+    inset -2px -2px 0 0 #dfdfdf;
+}
+
+/* 11 by 21, the era's proportions. Chrome anchors the thumb's top edge to the
+   track, so it needs half the difference back as a negative margin to straddle
+   the groove; Firefox centers it already. */
+:root[data-theme="win95"] .slider input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 11px;
+  height: 21px;
+  margin-top: -9px;
+  background: #c0c0c0;
+  border: none;
+  /* The theme-wide corner reset is on *, which never matches a pseudo-element,
+     so the round default thumb has to be squared off here. */
+  border-radius: 0;
+  box-shadow:
+    inset -1px -1px 0 0 #000000,
+    inset 1px 1px 0 0 #ffffff,
+    inset -2px -2px 0 0 #808080,
+    inset 2px 2px 0 0 #dfdfdf;
+}
+
+:root[data-theme="win95"] .slider input[type="range"]::-moz-range-thumb {
+  width: 11px;
+  height: 21px;
+  background: #c0c0c0;
+  border: none;
+  border-radius: 0;
+  box-shadow:
+    inset -1px -1px 0 0 #000000,
+    inset 1px 1px 0 0 #ffffff,
+    inset -2px -2px 0 0 #808080,
+    inset 2px 2px 0 0 #dfdfdf;
+}
+
+/* The dotted rectangle the checkboxes and radios use, drawn around the whole
+   control since the thumb can't carry its own focus ring. */
+:root[data-theme="win95"] .slider input[type="range"]:focus-visible {
+  outline: 1px dotted #000000;
+  outline-offset: 1px;
 }
 
 /* The console as a Win95 application window: navy title bar with control
