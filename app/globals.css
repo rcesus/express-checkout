@@ -181,7 +181,8 @@
    buttons, gray dialog body, and each log entry a sunken white field. Follows
    the anatomy of the Themesberg Win95 kit's card component, but keeps this
    theme's box-shadow bevels instead of the kit's flat borders. */
-:root[data-theme="win95"] .console-head {
+:root[data-theme="win95"] .console-head,
+:root[data-theme="win95"] .window-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -196,8 +197,62 @@
   font-weight: bold;
 }
 
+/* The window title bar only exists for the win95 theme. */
+.window-head,
 .console-controls {
   display: none;
+}
+
+/* The form and the mounted component become one window: the column carries the
+   frame and title bar, and the two cards inside it go flat. */
+:root[data-theme="win95"] .right-col {
+  gap: 0;
+  background: #c0c0c0;
+  box-shadow:
+    inset -1px -1px 0 0 #000000,
+    inset 1px 1px 0 0 #ffffff,
+    inset -2px -2px 0 0 #808080,
+    inset 2px 2px 0 0 #dfdfdf;
+}
+
+:root[data-theme="win95"] .right-col .card {
+  background: transparent;
+  box-shadow: none;
+  padding: 14px;
+}
+
+/* Etched divider where the component starts, so the two halves read as
+   separate panes of the same window. */
+:root[data-theme="win95"] .right-col .checkout {
+  padding-top: 14px;
+  border-top: 1px solid #808080;
+  box-shadow: inset 0 1px 0 0 #ffffff;
+}
+
+/* Group box around the customer block: etched frame, no fill. */
+:root[data-theme="win95"] .customer-card {
+  background: transparent;
+  border: none;
+  box-shadow:
+    inset 1px 1px 0 0 #808080,
+    inset -1px -1px 0 0 #ffffff;
+}
+
+/* The overlay that hides the component mid-swap matches the white well instead
+   of flashing gray over it. */
+:root[data-theme="win95"] .pay-overlay {
+  background: #ffffff;
+}
+
+/* The component mounts into a sunken white well. */
+:root[data-theme="win95"] .pay-container {
+  background: #ffffff;
+  border: none;
+  box-shadow:
+    inset 1px 1px 0 0 #808080,
+    inset -1px -1px 0 0 #ffffff,
+    inset 2px 2px 0 0 #000000,
+    inset -2px -2px 0 0 #dfdfdf;
 }
 
 :root[data-theme="win95"] .console-controls {
