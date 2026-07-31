@@ -29,6 +29,7 @@ type Customer = {
   firstName: string;
   lastName: string;
   email: string;
+  address: string;
   address1: string;
   city: string;
   state: string;
@@ -41,6 +42,7 @@ const EMPTY_FORM = {
   firstName: "",
   lastName: "",
   email: "",
+  address: "",
   address1: "",
   city: "",
   state: "",
@@ -276,6 +278,7 @@ export default function Home() {
         firstName: newCustomer.firstName,
         lastName: newCustomer.lastName,
         email: newCustomer.email,
+        address: newCustomer.address,
         address1: newCustomer.address1,
         city: newCustomer.city,
         state: newCustomer.state,
@@ -550,12 +553,14 @@ export default function Home() {
                 <p className="customer-name">
                   {selectedCustomer.firstName} {selectedCustomer.lastName}
                 </p>
-                {(selectedCustomer.address1 ||
+                {(selectedCustomer.address ||
+                  selectedCustomer.address1 ||
                   selectedCustomer.city ||
                   selectedCustomer.state ||
                   selectedCustomer.zip) && (
                   <p className="customer-line">
                     {[
+                      selectedCustomer.address,
                       selectedCustomer.address1,
                       selectedCustomer.city,
                       [selectedCustomer.state, selectedCustomer.zip]
@@ -581,6 +586,7 @@ export default function Home() {
                   First name
                   <input
                     type="text"
+                    placeholder="Rocky"
                     value={newCustomer.firstName}
                     onChange={setNewField("firstName")}
                   />
@@ -589,6 +595,7 @@ export default function Home() {
                   Last name
                   <input
                     type="text"
+                    placeholder="Balboa"
                     value={newCustomer.lastName}
                     onChange={setNewField("lastName")}
                   />
@@ -597,6 +604,7 @@ export default function Home() {
                   Email
                   <input
                     type="email"
+                    placeholder="rocky.balboa@example.com"
                     value={newCustomer.email}
                     onChange={setNewField("email")}
                   />
@@ -605,6 +613,16 @@ export default function Home() {
                   Address
                   <input
                     type="text"
+                    placeholder="1818 E Tusculum St"
+                    value={newCustomer.address}
+                    onChange={setNewField("address")}
+                  />
+                </label>
+                <label>
+                  Address 2
+                  <input
+                    type="text"
+                    placeholder="Apt 2"
                     value={newCustomer.address1}
                     onChange={setNewField("address1")}
                   />
@@ -613,6 +631,7 @@ export default function Home() {
                   City
                   <input
                     type="text"
+                    placeholder="Philadelphia"
                     value={newCustomer.city}
                     onChange={setNewField("city")}
                   />
@@ -621,6 +640,7 @@ export default function Home() {
                   State
                   <input
                     type="text"
+                    placeholder="PA"
                     value={newCustomer.state}
                     onChange={setNewField("state")}
                   />
@@ -629,6 +649,7 @@ export default function Home() {
                   Zip
                   <input
                     type="text"
+                    placeholder="19134"
                     value={newCustomer.zip}
                     onChange={setNewField("zip")}
                   />

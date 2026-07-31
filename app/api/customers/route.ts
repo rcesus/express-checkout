@@ -13,6 +13,7 @@ type Customer = {
   firstName: string;
   lastName: string;
   email: string;
+  address: string;
   address1: string;
   city: string;
   state: string;
@@ -41,6 +42,7 @@ function normalize(record: Record<string, unknown>): Customer {
     firstName: pick(record, "firstname"),
     lastName: pick(record, "lastname"),
     email: pick(record, "email"),
+    address: pick(record, "address"),
     address1: pick(record, "address1"),
     city: pick(record, "city"),
     state: pick(record, "state"),

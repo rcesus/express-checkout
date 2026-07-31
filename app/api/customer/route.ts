@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
     firstName?: string;
     lastName?: string;
     email?: string;
+    address?: string;
     address1?: string;
     city?: string;
     state?: string;
@@ -59,6 +60,7 @@ export async function POST(req: NextRequest) {
       firstname: body.firstName?.trim() ?? "",
       lastname: body.lastName?.trim() ?? "",
       email,
+      address: body.address?.trim() ?? "",
       address1: body.address1?.trim() ?? "",
       city: body.city?.trim() ?? "",
       state: body.state?.trim() ?? "",
