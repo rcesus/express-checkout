@@ -105,6 +105,10 @@ export default function Home() {
   const [searchResults, setSearchResults] = useState<Customer[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState("");
+  // The in-flight search, so a newer one can cancel it, and the query it ran
+  // for, so the debounce doesn't repeat a search that already happened.
+  const searchAbort = useRef<AbortController | null>(null);
+  const lastSearched = useRef("");
 
   // Create-a-customer state.
   const [creating, setCreating] = useState(false);
@@ -214,27 +218,38 @@ export default function Home() {
     if (el) el.innerHTML = "";
   }
 
-  async function runSearch() {
+  // Shared by the Search button, Enter, and the as-you-type effect below.
+  // Manual triggers report a missing entrypoint or private token; the typing
+  // path stays quiet about those so a half-typed name can't fill the box with
+  // configuration errors on every keystroke.
+  async function runSearch(query: string, manual: boolean) {
     setSearchError("");
     if (!settings.entryPoint) {
-      setSearchError("Add your entrypoint in settings first.");
+      if (manual) setSearchError("Add your entrypoint in settings first.");
       return;
     }
     if (!hasPrivateToken) {
-      setSearchError("Searching customers needs a private token. Add one in settings.");
+      if (manual) setSearchError("Searching customers needs a private token. Add one in settings.");
       return;
     }
-    const q = searchQuery.trim();
+    const q = query.trim();
     if (!q) {
-      setSearchError("Type a name or email to search.");
+      if (manual) setSearchError("Type a name or email to search.");
       return;
     }
+    // Drop whatever is still in flight. Each search fans out to several upstream
+    // requests, so without this a slow early query can come back after a later
+    // one and overwrite the results with matches for a shorter prefix.
+    searchAbort.current?.abort();
+    const controller = new AbortController();
+    searchAbort.current = controller;
+    lastSearched.current = q;
     setSearching(true);
     try {
       const url = `/api/customers?entryPoint=${encodeURIComponent(
         settings.entryPoint,
       )}&q=${encodeURIComponent(q)}`;
-      const res = await fetch(url);
+      const res = await fetch(url, { signal: controller.signal });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Customer search failed.");
       const customers: Customer[] = data.customers ?? [];
@@ -249,11 +264,30 @@ export default function Home() {
       };
       if (!customers.length) setSearchError("No matching customers.");
     } catch (e) {
+      // A superseded search isn't a failure. Leave the state alone and let the
+      // newer one own the results and the spinner.
+      if (e instanceof DOMException && e.name === "AbortError") return;
       setSearchError(e instanceof Error ? e.message : "Customer search failed.");
     } finally {
-      setSearching(false);
+      if (searchAbort.current === controller) setSearching(false);
     }
   }
+
+  // Search as you type, a beat behind the keystrokes. The button and Enter fire
+  // the same call without waiting. Skipping a query that already ran keeps
+  // "Back to search" from refetching the list it is returning to.
+  useEffect(() => {
+    const q = searchQuery.trim();
+    // One character matches too much to be worth the round trip.
+    if (q.length < 2) return;
+    if (selectedCustomer || creating) return;
+    if (q === lastSearched.current) return;
+    const t = window.setTimeout(() => runSearch(q, false), 300);
+    return () => window.clearTimeout(t);
+    // runSearch is redeclared every render; depending on it would restart the
+    // timer on unrelated state changes and the debounce would never fire.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, selectedCustomer, creating, settings.entryPoint, hasPrivateToken]);
 
   function selectCustomer(c: Customer) {
     setSelectedCustomer(c);
@@ -825,14 +859,14 @@ export default function Home() {
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
-                        runSearch();
+                        runSearch(searchQuery, true);
                       }
                     }}
                   />
                   <button
                     type="button"
                     className="btn secondary"
-                    onClick={runSearch}
+                    onClick={() => runSearch(searchQuery, true)}
                     disabled={searching}
                   >
                     {searching ? "Searching..." : "Search"}
