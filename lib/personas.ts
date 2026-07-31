@@ -63,3 +63,24 @@ export function addDays(iso: string, days: number): string {
   d.setDate(d.getDate() + days);
   return localIsoDate(d);
 }
+
+// One billing interval of the given frequency past today. Keeps the "specific
+// date" end date in step with the chosen frequency, measured from the current
+// date rather than the start date.
+export function endDateFromToday(freq: Frequency): string {
+  const today = localIsoDate(new Date());
+  switch (freq) {
+    case "weekly":
+      return addDays(today, 7);
+    case "every2weeks":
+      return addDays(today, 14);
+    case "monthly":
+      return addMonths(today, 1);
+    case "every3months":
+      return addMonths(today, 3);
+    case "every6months":
+      return addMonths(today, 6);
+    case "annually":
+      return addMonths(today, 12);
+  }
+}

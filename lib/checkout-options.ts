@@ -4,6 +4,8 @@
 // for Apple Pay buttonStyle; the rest below are the standard Apple set and are
 // not guaranteed by the docs.
 
+import { localIsoDate, addDays } from "./personas";
+
 type Option = { value: string; label: string };
 
 export const APPLE_PAY_BUTTON_STYLES: Option[] = [
@@ -38,6 +40,33 @@ export const SUPPORTED_NETWORKS: Option[] = [
   { value: "masterCard", label: "Mastercard" },
   { value: "amex", label: "Amex" },
   { value: "discover", label: "Discover" },
+  { value: "jcb", label: "JCB" },
+];
+
+// invoiceData enums. Status and type codes are from the invoice lifecycle guide
+// (0 draft, 1 active/open, 2 partially paid, 4 paid, 99 canceled; type 0 single,
+// 1 scheduled). frequency mirrors the autopay set the component accepts.
+export const INVOICE_TYPE_OPTIONS: Option[] = [
+  { value: "0", label: "Single" },
+  { value: "1", label: "Scheduled" },
+];
+
+export const INVOICE_STATUS_OPTIONS: Option[] = [
+  { value: "0", label: "Draft" },
+  { value: "1", label: "Active / Open" },
+  { value: "2", label: "Partially paid" },
+  { value: "4", label: "Paid / Complete" },
+  { value: "99", label: "Canceled" },
+];
+
+export const INVOICE_FREQUENCIES: Option[] = [
+  { value: "onetime", label: "One-time" },
+  { value: "weekly", label: "Weekly" },
+  { value: "every2weeks", label: "Every 2 weeks" },
+  { value: "monthly", label: "Monthly" },
+  { value: "every3months", label: "Every 3 months" },
+  { value: "every6months", label: "Every 6 months" },
+  { value: "annually", label: "Annually" },
 ];
 
 export const COLUMN_OPTIONS: Option[] = [
@@ -104,11 +133,25 @@ export const GOOGLE_PAY_LANGUAGES: Option[] = [
   { value: "id", label: "Indonesian" },
 ];
 
-export type PaymentMode = "one_time" | "autopay";
+export type PaymentMode = "one_time" | "autopay" | "tokenization";
 
-// Tri-state string instead of boolean so the Advanced tab can tell "not set"
+// Tri-state string instead of boolean so the modal can tell "not set"
 // (omit the key) apart from an explicit false.
 export type TriState = "" | "true" | "false";
+
+// expressCheckout.invoiceData. Attaching it makes a successful one-time or
+// autopay charge create an invoice; tokenization ignores it. Numeric codes are
+// stored as numbers to match the API. Dates are YYYY-MM-DD strings. frequency
+// and invoiceEndDate only apply to scheduled invoices (invoiceType 1).
+export interface InvoiceData {
+  invoiceNumber: string;
+  invoiceDate: string;
+  invoiceDueDate: string;
+  invoiceType: number;
+  invoiceStatus: number;
+  frequency: string;
+  invoiceEndDate: string;
+}
 
 export interface CheckoutConfig {
   // one_time charges once; autopay sets up a recurring subscription. Autopay is
@@ -136,7 +179,18 @@ export interface CheckoutConfig {
   includeDetails: TriState;
   fee: string;
   currency: string;
+  // one-time only. When true, a one-time charge also tokenizes the card and
+  // returns the token. This is the "pay + tokenize" flow; there's no separate
+  // mode for it.
   saveIfSuccess: boolean;
+  // Whether to attach invoiceData to the request. Off by default; the fields
+  // below carry prefilled values so enabling it needs no typing.
+  attachInvoice: boolean;
+  invoiceData: InvoiceData;
+  // tokenization only. fallbackAuthAmount is the verify-and-void auth amount;
+  // methodDescription labels the saved method.
+  fallbackAuthAmount: string;
+  methodDescription: string;
   applePayLanguage: string;
   googlePayLanguage: string;
   requiredShippingContactFields: string[];
@@ -165,8 +219,66 @@ export const DEFAULT_CHECKOUT: CheckoutConfig = {
   fee: "0",
   currency: "USD",
   saveIfSuccess: false,
+  attachInvoice: false,
+  // Dates and number stay blank here and get filled by freshInvoiceData() the
+  // first time the invoice toggle is switched on, so "today" is the day it's
+  // enabled rather than app-load time.
+  invoiceData: {
+    invoiceNumber: "",
+    invoiceDate: "",
+    invoiceDueDate: "",
+    invoiceType: 0,
+    invoiceStatus: 1,
+    frequency: "monthly",
+    invoiceEndDate: "",
+  },
+  fallbackAuthAmount: "0.01",
+  methodDescription: "Saved via ExpressCheckout",
   applePayLanguage: "en-US",
   googlePayLanguage: "en",
   requiredShippingContactFields: [],
   customerId: "12345",
 };
+
+// Date-based, incrementing invoice number: INV-YYYYMMDD-NN. The suffix comes
+// from a per-session counter so repeat demo runs don't collide. The field stays
+// editable, so this is only the seed.
+export function nextInvoiceNumber(): string {
+  const today = localIsoDate(new Date()).replace(/-/g, "");
+  let seq = 1;
+  if (typeof window !== "undefined") {
+    const raw = window.sessionStorage.getItem("payabli_invoice_seq");
+    seq = raw ? Number(raw) + 1 : 1;
+    window.sessionStorage.setItem("payabli_invoice_seq", String(seq));
+  }
+  return `INV-${today}-${String(seq).padStart(2, "0")}`;
+}
+
+// Prefilled invoiceData for the moment the toggle is enabled: a fresh number,
+// today's date, and a due date 30 days out. Everything else keeps its default.
+export function freshInvoiceData(): InvoiceData {
+  const today = localIsoDate(new Date());
+  return {
+    ...DEFAULT_CHECKOUT.invoiceData,
+    invoiceNumber: nextInvoiceNumber(),
+    invoiceDate: today,
+    invoiceDueDate: addDays(today, 30),
+  };
+}
+
+// Shapes invoiceData for the request: the core fields always, plus the
+// scheduled-only fields (frequency, invoiceEndDate) when invoiceType is 1.
+export function buildInvoiceData(inv: InvoiceData): Record<string, unknown> {
+  const base: Record<string, unknown> = {
+    invoiceNumber: inv.invoiceNumber,
+    invoiceDate: inv.invoiceDate,
+    invoiceDueDate: inv.invoiceDueDate,
+    invoiceType: inv.invoiceType,
+    invoiceStatus: inv.invoiceStatus,
+  };
+  if (inv.invoiceType === 1) {
+    base.frequency = inv.frequency;
+    if (inv.invoiceEndDate) base.invoiceEndDate = inv.invoiceEndDate;
+  }
+  return base;
+}

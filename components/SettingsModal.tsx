@@ -4,12 +4,20 @@ import { useEffect, useState } from "react";
 import {
   APPLE_PAY_BUTTON_STYLES,
   APPLE_PAY_BUTTON_TYPES,
+  APPLE_PAY_LANGUAGES,
   GOOGLE_PAY_BUTTON_STYLES,
+  GOOGLE_PAY_LANGUAGES,
   SUPPORTED_NETWORKS,
   COLUMN_OPTIONS,
   SHIPPING_CONTACT_FIELDS,
+  INVOICE_TYPE_OPTIONS,
+  INVOICE_STATUS_OPTIONS,
+  INVOICE_FREQUENCIES,
   DEFAULT_CHECKOUT,
+  freshInvoiceData,
+  nextInvoiceNumber,
   type CheckoutConfig,
+  type InvoiceData,
   type TriState,
 } from "@/lib/checkout-options";
 
@@ -27,14 +35,14 @@ interface Props {
   onClose: () => void;
 }
 
+type Tab = "connection" | "mode" | "style" | "networks";
+
 export default function SettingsModal({ open, settings, hasPrivateToken, onSave, onClose }: Props) {
   const [entryPoint, setEntryPoint] = useState(settings.entryPoint);
   const [publicToken, setPublicToken] = useState(settings.publicToken);
   const [privateToken, setPrivateToken] = useState("");
   const [checkout, setCheckout] = useState<CheckoutConfig>(settings.checkout);
-  const [tab, setTab] = useState<"connection" | "checkout" | "styling" | "sizing" | "advanced">(
-    "connection",
-  );
+  const [tab, setTab] = useState<Tab>("connection");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -51,8 +59,27 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
 
   if (!open) return null;
 
+  const isOneTime = checkout.paymentMode === "one_time";
+  const isAutopay = checkout.paymentMode === "autopay";
+  const isTokenization = checkout.paymentMode === "tokenization";
+  const isScheduledInvoice = checkout.invoiceData.invoiceType === 1;
+
   function patch(next: Partial<CheckoutConfig>) {
     setCheckout((c) => ({ ...c, ...next }));
+  }
+
+  function patchInvoice(next: Partial<InvoiceData>) {
+    setCheckout((c) => ({ ...c, invoiceData: { ...c.invoiceData, ...next } }));
+  }
+
+  // First enable seeds the fields (fresh number, today's dates); a later
+  // re-enable keeps whatever's already there.
+  function toggleInvoice(on: boolean) {
+    setCheckout((c) => ({
+      ...c,
+      attachInvoice: on,
+      invoiceData: on && !c.invoiceData.invoiceNumber ? freshInvoiceData() : c.invoiceData,
+    }));
   }
 
   function resetSizes() {
@@ -61,19 +88,6 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
       buttonBorderRadius: DEFAULT_CHECKOUT.buttonBorderRadius,
       paddingX: DEFAULT_CHECKOUT.paddingX,
       paddingY: DEFAULT_CHECKOUT.paddingY,
-    });
-  }
-
-  function resetAdvanced() {
-    patch({
-      includeDetails: DEFAULT_CHECKOUT.includeDetails,
-      fee: DEFAULT_CHECKOUT.fee,
-      currency: DEFAULT_CHECKOUT.currency,
-      saveIfSuccess: DEFAULT_CHECKOUT.saveIfSuccess,
-      applePayLanguage: DEFAULT_CHECKOUT.applePayLanguage,
-      googlePayLanguage: DEFAULT_CHECKOUT.googlePayLanguage,
-      requiredShippingContactFields: DEFAULT_CHECKOUT.requiredShippingContactFields,
-      customerId: DEFAULT_CHECKOUT.customerId,
     });
   }
 
@@ -135,6 +149,108 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
     }
   }
 
+  const invoiceSection = (
+    <fieldset className="end-mode">
+      <legend>Invoice</legend>
+      <label className="radio">
+        <input
+          type="checkbox"
+          checked={checkout.attachInvoice}
+          onChange={(e) => toggleInvoice(e.target.checked)}
+        />
+        Attach invoice data
+      </label>
+      {checkout.attachInvoice && (
+        <>
+          <label>
+            Invoice number
+            <div className="search-row">
+              <input
+                type="text"
+                value={checkout.invoiceData.invoiceNumber}
+                onChange={(e) => patchInvoice({ invoiceNumber: e.target.value })}
+              />
+              <button
+                type="button"
+                className="btn secondary"
+                onClick={() => patchInvoice({ invoiceNumber: nextInvoiceNumber() })}
+              >
+                Regenerate
+              </button>
+            </div>
+          </label>
+          <label>
+            Invoice date
+            <input
+              type="date"
+              value={checkout.invoiceData.invoiceDate}
+              onChange={(e) => patchInvoice({ invoiceDate: e.target.value })}
+            />
+          </label>
+          <label>
+            Due date
+            <input
+              type="date"
+              value={checkout.invoiceData.invoiceDueDate}
+              onChange={(e) => patchInvoice({ invoiceDueDate: e.target.value })}
+            />
+          </label>
+          <label>
+            Type
+            <select
+              value={String(checkout.invoiceData.invoiceType)}
+              onChange={(e) => patchInvoice({ invoiceType: Number(e.target.value) })}
+            >
+              {INVOICE_TYPE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Status
+            <select
+              value={String(checkout.invoiceData.invoiceStatus)}
+              onChange={(e) => patchInvoice({ invoiceStatus: Number(e.target.value) })}
+            >
+              {INVOICE_STATUS_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          {isScheduledInvoice && (
+            <>
+              <label>
+                Frequency
+                <select
+                  value={checkout.invoiceData.frequency}
+                  onChange={(e) => patchInvoice({ frequency: e.target.value })}
+                >
+                  {INVOICE_FREQUENCIES.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Invoice end date
+                <input
+                  type="date"
+                  value={checkout.invoiceData.invoiceEndDate}
+                  onChange={(e) => patchInvoice({ invoiceEndDate: e.target.value })}
+                />
+              </label>
+            </>
+          )}
+        </>
+      )}
+    </fieldset>
+  );
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -153,38 +269,29 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
           <button
             type="button"
             role="tab"
-            aria-selected={tab === "checkout"}
-            className={`modal-tab${tab === "checkout" ? " active" : ""}`}
-            onClick={() => setTab("checkout")}
+            aria-selected={tab === "mode"}
+            className={`modal-tab${tab === "mode" ? " active" : ""}`}
+            onClick={() => setTab("mode")}
           >
-            Checkout Options
+            Mode
           </button>
           <button
             type="button"
             role="tab"
-            aria-selected={tab === "styling"}
-            className={`modal-tab${tab === "styling" ? " active" : ""}`}
-            onClick={() => setTab("styling")}
+            aria-selected={tab === "style"}
+            className={`modal-tab${tab === "style" ? " active" : ""}`}
+            onClick={() => setTab("style")}
           >
-            Button Styling
+            Button Styling &amp; Sizing
           </button>
           <button
             type="button"
             role="tab"
-            aria-selected={tab === "sizing"}
-            className={`modal-tab${tab === "sizing" ? " active" : ""}`}
-            onClick={() => setTab("sizing")}
+            aria-selected={tab === "networks"}
+            className={`modal-tab${tab === "networks" ? " active" : ""}`}
+            onClick={() => setTab("networks")}
           >
-            Button Sizing
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === "advanced"}
-            className={`modal-tab${tab === "advanced" ? " active" : ""}`}
-            onClick={() => setTab("advanced")}
-          >
-            Advanced
+            Networks &amp; Shipping
           </button>
         </div>
 
@@ -220,15 +327,15 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
           </>
         )}
 
-        {tab === "checkout" && (
+        {tab === "mode" && (
           <>
             <fieldset className="end-mode">
-              <legend>Payment Mode</legend>
+              <legend>Payment mode</legend>
               <label className="radio">
                 <input
                   type="radio"
                   name="paymentMode"
-                  checked={checkout.paymentMode === "one_time"}
+                  checked={isOneTime}
                   onChange={() => patch({ paymentMode: "one_time" })}
                 />
                 One-time payment
@@ -237,43 +344,121 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
                 <input
                   type="radio"
                   name="paymentMode"
-                  checked={checkout.paymentMode === "autopay"}
+                  checked={isAutopay}
                   onChange={() => patch({ paymentMode: "autopay" })}
                 />
                 Autopay (recurring)
               </label>
-            </fieldset>
-
-            <fieldset className="end-mode">
-              <legend>Customer Identifier (autopay)</legend>
               <label className="radio">
                 <input
-                  type="checkbox"
-                  checked={checkout.useCustomerId}
-                  disabled={checkout.paymentMode !== "autopay"}
-                  onChange={(e) => patch({ useCustomerId: e.target.checked })}
+                  type="radio"
+                  name="paymentMode"
+                  checked={isTokenization}
+                  onChange={() => patch({ paymentMode: "tokenization" })}
                 />
-                Send as customerId instead of customerNumber
+                Tokenization (save method, no charge)
               </label>
             </fieldset>
 
             <fieldset className="end-mode">
-              <legend>Card Networks</legend>
-              {SUPPORTED_NETWORKS.map((o) => (
-                <label className="radio" key={o.value}>
+              <legend>Fee and currency</legend>
+              <label>
+                Fee
+                <input
+                  type="text"
+                  value={checkout.fee}
+                  onChange={(e) => patch({ fee: e.target.value })}
+                />
+              </label>
+              <label>
+                Currency
+                <input
+                  type="text"
+                  value={checkout.currency}
+                  onChange={(e) => patch({ currency: e.target.value })}
+                />
+              </label>
+              <p className="modal-note">
+                {isTokenization
+                  ? "Tokenization sends amount and fee but the component ignores them. The charge amount and schedule live on the main page."
+                  : "The charge amount and the autopay schedule live on the main page form."}
+              </p>
+            </fieldset>
+
+            {isOneTime && (
+              <fieldset className="end-mode">
+                <legend>One-time options</legend>
+                <label className="radio">
                   <input
                     type="checkbox"
-                    checked={checkout.supportedNetworks.includes(o.value)}
-                    onChange={() => toggleNetwork(o.value)}
+                    checked={checkout.saveIfSuccess}
+                    onChange={(e) => patch({ saveIfSuccess: e.target.checked })}
                   />
-                  {o.label}
+                  Also save the card on success (pay + tokenize)
                 </label>
-              ))}
-            </fieldset>
+                <label>
+                  Return transaction details (includeDetails)
+                  <select
+                    value={checkout.includeDetails}
+                    onChange={(e) => patch({ includeDetails: e.target.value as TriState })}
+                  >
+                    <option value="">Not set</option>
+                    <option value="true">True</option>
+                    <option value="false">False</option>
+                  </select>
+                </label>
+              </fieldset>
+            )}
+
+            {isAutopay && (
+              <fieldset className="end-mode">
+                <legend>Autopay customer identifier</legend>
+                <label className="radio">
+                  <input
+                    type="checkbox"
+                    checked={checkout.useCustomerId}
+                    onChange={(e) => patch({ useCustomerId: e.target.checked })}
+                  />
+                  Send as customerId instead of customerNumber
+                </label>
+                <label>
+                  Customer ID (experimental)
+                  <input
+                    type="text"
+                    value={checkout.customerId}
+                    onChange={(e) => patch({ customerId: e.target.value })}
+                  />
+                </label>
+              </fieldset>
+            )}
+
+            {isTokenization && (
+              <fieldset className="end-mode">
+                <legend>Tokenization options</legend>
+                <label>
+                  Fallback auth amount
+                  <input
+                    type="text"
+                    value={checkout.fallbackAuthAmount}
+                    onChange={(e) => patch({ fallbackAuthAmount: e.target.value })}
+                  />
+                </label>
+                <label>
+                  Method description
+                  <input
+                    type="text"
+                    value={checkout.methodDescription}
+                    onChange={(e) => patch({ methodDescription: e.target.value })}
+                  />
+                </label>
+              </fieldset>
+            )}
+
+            {(isOneTime || isAutopay) && invoiceSection}
           </>
         )}
 
-        {tab === "styling" && (
+        {tab === "style" && (
           <>
             <fieldset className="end-mode">
               <legend>Apple Pay</legend>
@@ -322,6 +507,20 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
                   ))}
                 </select>
               </label>
+              <label>
+                Language
+                <select
+                  value={checkout.applePayLanguage}
+                  disabled={!checkout.applePayEnabled}
+                  onChange={(e) => patch({ applePayLanguage: e.target.value })}
+                >
+                  {APPLE_PAY_LANGUAGES.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </fieldset>
 
             <fieldset className="end-mode">
@@ -348,16 +547,14 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
                   ))}
                 </select>
               </label>
-            </fieldset>
-
-            <fieldset className="end-mode">
-              <legend>Layout</legend>
               <label>
+                Language
                 <select
-                  value={String(checkout.columns)}
-                  onChange={(e) => patch({ columns: Number(e.target.value) })}
+                  value={checkout.googlePayLanguage}
+                  disabled={!checkout.googlePayEnabled}
+                  onChange={(e) => patch({ googlePayLanguage: e.target.value })}
                 >
-                  {COLUMN_OPTIONS.map((o) => (
+                  {GOOGLE_PAY_LANGUAGES.map((o) => (
                     <option key={o.value} value={o.value}>
                       {o.label}
                     </option>
@@ -365,11 +562,22 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
                 </select>
               </label>
             </fieldset>
-          </>
-        )}
 
-        {tab === "sizing" && (
-          <>
+            <fieldset className="end-mode">
+              <legend>Layout</legend>
+              {COLUMN_OPTIONS.map((o) => (
+                <label className="radio" key={o.value}>
+                  <input
+                    type="radio"
+                    name="columns"
+                    checked={checkout.columns === Number(o.value)}
+                    onChange={() => patch({ columns: Number(o.value) })}
+                  />
+                  {o.label}
+                </label>
+              ))}
+            </fieldset>
+
             <fieldset className="end-mode">
               <legend>Button size (Apple Pay and Google Pay)</legend>
               <label className="slider">
@@ -423,65 +631,20 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
           </>
         )}
 
-        {tab === "advanced" && (
+        {tab === "networks" && (
           <>
             <fieldset className="end-mode">
-              <legend>Wallet request options</legend>
-              <label>
-                Include details
-                <select
-                  value={checkout.includeDetails}
-                  onChange={(e) => patch({ includeDetails: e.target.value as TriState })}
-                >
-                  <option value="">Not set</option>
-                  <option value="true">True</option>
-                  <option value="false">False</option>
-                </select>
-              </label>
-              <label className="radio">
-                <input
-                  type="checkbox"
-                  checked={checkout.saveIfSuccess}
-                  onChange={(e) => patch({ saveIfSuccess: e.target.checked })}
-                />
-                Save if success
-              </label>
-              <label>
-                Fee
-                <input
-                  type="text"
-                  value={checkout.fee}
-                  onChange={(e) => patch({ fee: e.target.value })}
-                />
-              </label>
-              <label>
-                Currency
-                <input
-                  type="text"
-                  value={checkout.currency}
-                  onChange={(e) => patch({ currency: e.target.value })}
-                />
-              </label>
-            </fieldset>
-
-            <fieldset className="end-mode">
-              <legend>Wallet language</legend>
-              <label>
-                Apple Pay language
-                <input
-                  type="text"
-                  value={checkout.applePayLanguage}
-                  onChange={(e) => patch({ applePayLanguage: e.target.value })}
-                />
-              </label>
-              <label>
-                Google Pay language
-                <input
-                  type="text"
-                  value={checkout.googlePayLanguage}
-                  onChange={(e) => patch({ googlePayLanguage: e.target.value })}
-                />
-              </label>
+              <legend>Card networks</legend>
+              {SUPPORTED_NETWORKS.map((o) => (
+                <label className="radio" key={o.value}>
+                  <input
+                    type="checkbox"
+                    checked={checkout.supportedNetworks.includes(o.value)}
+                    onChange={() => toggleNetwork(o.value)}
+                  />
+                  {o.label}
+                </label>
+              ))}
             </fieldset>
 
             <fieldset className="end-mode">
@@ -496,21 +659,6 @@ export default function SettingsModal({ open, settings, hasPrivateToken, onSave,
                   {field.label}
                 </label>
               ))}
-            </fieldset>
-
-            <fieldset className="end-mode">
-              <legend>Customer ID (experimental)</legend>
-              <label>
-                Customer ID
-                <input
-                  type="text"
-                  value={checkout.customerId}
-                  onChange={(e) => patch({ customerId: e.target.value })}
-                />
-              </label>
-              <button type="button" className="btn secondary reset-advanced" onClick={resetAdvanced}>
-                Reset to defaults
-              </button>
             </fieldset>
           </>
         )}

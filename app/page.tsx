@@ -4,13 +4,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Script from "next/script";
 import SettingsModal, { PaypointSettings } from "@/components/SettingsModal";
 import ConsoleLog, { type LogEntry, type LogKind } from "@/components/ConsoleLog";
-import { DEFAULT_CHECKOUT } from "@/lib/checkout-options";
+import { DEFAULT_CHECKOUT, buildInvoiceData } from "@/lib/checkout-options";
 import {
   FREQUENCIES,
   PERSONA,
   localIsoDate,
   addMonths,
   addDays,
+  endDateFromToday,
   type Frequency,
   type EndMode,
 } from "@/lib/personas";
@@ -299,6 +300,8 @@ export default function Home() {
   );
 
   const isOneTime = settings.checkout.paymentMode === "one_time";
+  const isAutopay = settings.checkout.paymentMode === "autopay";
+  const isTokenization = settings.checkout.paymentMode === "tokenization";
 
   function renderComponent(customerNumber?: string) {
     const container = document.getElementById(CONTAINER_ID);
@@ -317,7 +320,7 @@ export default function Home() {
         : { frequency, startDate: startAt, untilCancel: true };
 
     const expressCheckout: Record<string, unknown> = {
-      mode: isOneTime ? "one_time" : "autopay",
+      mode: settings.checkout.paymentMode,
       amount: amountValue,
       fee: Number(settings.checkout.fee) || 0,
       currency: settings.checkout.currency || "USD",
@@ -333,12 +336,26 @@ export default function Home() {
           y: settings.checkout.paddingY,
         },
       },
-      // Autopay carries the recurring schedule; one-time omits the block entirely.
-      ...(isOneTime ? {} : { autopay }),
-      ...(settings.checkout.includeDetails
-        ? { includeDetails: settings.checkout.includeDetails === "true" }
+      // Autopay carries the recurring schedule; the other modes omit it.
+      ...(isAutopay ? { autopay } : {}),
+      // saveIfSuccess is one-time only (the pay + tokenize flow); the component
+      // ignores it for autopay and tokenization.
+      ...(isOneTime ? { saveIfSuccess: settings.checkout.saveIfSuccess } : {}),
+      // invoiceData attaches to one-time and autopay charges; tokenization
+      // ignores it.
+      ...(settings.checkout.attachInvoice && !isTokenization
+        ? { invoiceData: buildInvoiceData(settings.checkout.invoiceData) }
         : {}),
-      saveIfSuccess: settings.checkout.saveIfSuccess,
+      // Tokenization-only: the verify-and-void auth amount and the saved
+      // method's label.
+      ...(isTokenization
+        ? {
+            fallbackAuthAmount: Number(settings.checkout.fallbackAuthAmount) || 0,
+            ...(settings.checkout.methodDescription
+              ? { methodDescription: settings.checkout.methodDescription }
+              : {}),
+          }
+        : {}),
       ...(settings.checkout.requiredShippingContactFields.length
         ? { requiredShippingContactFields: settings.checkout.requiredShippingContactFields }
         : {}),
@@ -366,6 +383,11 @@ export default function Home() {
       // the iframe can fetch it on whatever domain this deploys to.
       customCssUrl: `${window.location.origin}/express-checkout.css`,
       expressCheckout,
+      // includeDetails is a sibling of expressCheckout, not a field inside it,
+      // and it only applies to one-time. The component ignores it otherwise.
+      ...(isOneTime && settings.checkout.includeDetails
+        ? { includeDetails: settings.checkout.includeDetails === "true" }
+        : {}),
       customerData: {
         ...(customerNumber
           ? settings.checkout.useCustomerId
@@ -391,7 +413,11 @@ export default function Home() {
         paymentMethod?: string;
       }) => {
         const ref = data?.data?.responseData?.referenceId;
-        const label = isOneTime ? "Payment complete" : "Subscription created";
+        const label = isOneTime
+          ? "Payment complete"
+          : isTokenization
+            ? "Payment method saved"
+            : "Subscription created";
         pushLog("event", "functionCallBackSuccess", data);
         setResult({
           ok: true,
@@ -435,7 +461,9 @@ export default function Home() {
       "note",
       isOneTime
         ? "Recommended webhooks for one-time: ApprovedPayment / DeclinedPayment for the charge result, then SettledPayment and FundedPayment to follow the money into your account."
-        : "Recommended webhooks for autopay: SubscriptionCreated to confirm the schedule, ApprovedPayment / DeclinedPayment on each recurring charge for the firing and its result (matched to the subscription by the transaction's ScheduleReference), and SubscriptionCompleted when it passes its end date.",
+        : isTokenization
+          ? "Tokenization saves the method through /TokenStorage/add and returns the token inline via functionCallBackSuccess. No charge runs, so no payment or funding webhooks fire for this step; watch for them when you later charge the saved method."
+          : "Recommended webhooks for autopay: SubscriptionCreated to confirm the schedule, ApprovedPayment / DeclinedPayment on each recurring charge for the firing and its result (matched to the subscription by the transaction's ScheduleReference), and SubscriptionCompleted when it passes its end date.",
     );
 
     // Cover the container so the iframe's own white first paint never shows.
@@ -466,7 +494,7 @@ export default function Home() {
     }
     // Autopay enforces the start-date floor. One-time charges once with no
     // schedule, so it skips the check.
-    if (!isOneTime && startDate < minStartDate) {
+    if (isAutopay && startDate < minStartDate) {
       setError("Pick a start date at least one day in the future.");
       return;
     }
@@ -751,14 +779,16 @@ export default function Home() {
             />
           </label>
 
-          {!isOneTime && (
+          {isAutopay && (
             <>
               <label>
                 Frequency
                 <select
                   value={frequency}
                   onChange={(e) => {
-                    setFrequency(e.target.value as Frequency);
+                    const next = e.target.value as Frequency;
+                    setFrequency(next);
+                    setEndDate(endDateFromToday(next));
                     markStale();
                   }}
                 >
