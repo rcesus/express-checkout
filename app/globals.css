@@ -217,7 +217,7 @@
 
 /* The column scrolls, so pin its title bar the way a real window keeps its
    caption while the contents move. */
-:root[data-theme="win95"] .window-head {
+:root[data-theme="win95"] .right-col > .window-head {
   position: sticky;
   top: 0;
   z-index: 1;
@@ -237,16 +237,61 @@
   box-shadow: inset 0 1px 0 0 #ffffff;
 }
 
-/* The customer block is a sunken white field like the log entries and the
-   component well, not a gray panel. */
+/* No frame around the customer block; it sits straight on the window surface. */
 :root[data-theme="win95"] .customer-card {
-  background: #ffffff;
+  padding: 0;
+  margin-bottom: 16px;
+  background: transparent;
   border: none;
+  box-shadow: none;
+}
+
+/* Creating a customer is its own dialog: raised frame, caption bar, fields
+   inset from the edges. */
+:root[data-theme="win95"] .customer-form {
+  padding: 0 0 12px;
+  background: #c0c0c0;
+  box-shadow:
+    inset -1px -1px 0 0 #000000,
+    inset 1px 1px 0 0 #ffffff,
+    inset -2px -2px 0 0 #808080,
+    inset 2px 2px 0 0 #dfdfdf;
+}
+
+:root[data-theme="win95"] .customer-form .window-head {
+  margin: 3px 3px 12px;
+}
+
+:root[data-theme="win95"] .customer-form > label,
+:root[data-theme="win95"] .customer-form > .form-actions,
+:root[data-theme="win95"] .customer-form > .error-text {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+/* Sunken white list box for search results, the era's standard. */
+:root[data-theme="win95"] .search-results {
+  border: none;
+  background: #ffffff;
   box-shadow:
     inset 1px 1px 0 0 #808080,
     inset -1px -1px 0 0 #ffffff,
     inset 2px 2px 0 0 #000000,
     inset -2px -2px 0 0 #dfdfdf;
+}
+
+:root[data-theme="win95"] .search-results li + li {
+  border-top: 1px solid #dfdfdf;
+}
+
+/* Selection is the classic navy bar with white text. */
+:root[data-theme="win95"] .result-row:hover {
+  background: #000080;
+}
+
+:root[data-theme="win95"] .result-row:hover .result-name,
+:root[data-theme="win95"] .result-row:hover .result-email {
+  color: #ffffff;
 }
 
 /* The overlay that hides the component mid-swap matches the white well instead

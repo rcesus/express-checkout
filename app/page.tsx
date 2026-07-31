@@ -692,6 +692,11 @@ export default function Home() {
               </>
             ) : creating ? (
               <div className="customer-form">
+                {/* win95 renders this form as its own dialog inside the window;
+                    other themes hide the caption. */}
+                <div className="window-head" aria-hidden="true">
+                  <span className="console-title">New customer</span>
+                </div>
                 <label>
                   First name
                   <input
