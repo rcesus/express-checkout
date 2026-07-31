@@ -22,7 +22,6 @@ export default function ConsoleLog({ entries }: { entries: LogEntry[] }) {
     <section className="card console">
       <div className="console-head">
         <span className="console-title">Console</span>
-        <span className="console-sub">what this page builds and sends</span>
       </div>
       <div className="console-body">
         {entries.length === 0 ? (

@@ -11,6 +11,8 @@ import {
   localIsoDate,
   addMonths,
   addDays,
+  earliestStartDate,
+  localMidnightWithOffset,
   endDateFromToday,
   type Frequency,
   type EndMode,
@@ -70,16 +72,15 @@ export default function Home() {
   const [hasPrivateToken, setHasPrivateToken] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
-  // Local tomorrow, matching the floor the component's validator builds in local
-  // time. The start date is sent to the component as a local datetime (see
-  // renderComponent), so tomorrow at local midnight clears its "at least 1 day in
-  // the future" check. A bare date would parse as UTC midnight and, west of UTC,
-  // fall below that floor.
-  const minStartDate = useMemo(() => addDays(localIsoDate(new Date()), 1), []);
+  // Earliest start whose UTC date is strictly after today's UTC date, so the
+  // Subscription/add "future" check passes in any timezone (see earliestStartDate).
+  // The value is sent with an explicit local UTC offset (see renderComponent) so
+  // the component's local-time floor and the server's UTC check read one instant.
+  const minStartDate = useMemo(() => earliestStartDate(new Date()), []);
 
   const [amount, setAmount] = useState("");
   const [frequency, setFrequency] = useState<Frequency>(persona.defaultFrequency);
-  const [startDate, setStartDate] = useState(() => addDays(localIsoDate(new Date()), 1));
+  const [startDate, setStartDate] = useState(() => earliestStartDate(new Date()));
   const [endMode, setEndMode] = useState<EndMode>(persona.defaultEndMode);
   const [endDate, setEndDate] = useState(() =>
     addMonths(addDays(localIsoDate(new Date()), 1), persona.defaultEndOffsetMonths ?? 6),
@@ -307,13 +308,13 @@ export default function Home() {
     const container = document.getElementById(CONTAINER_ID);
     if (container) container.innerHTML = "";
 
-    // The component validates startDate by parsing it and comparing against a floor
-    // it builds in local time (today at local midnight, plus one day). A bare
-    // "YYYY-MM-DD" parses as UTC midnight, which sits below that floor west of UTC,
-    // so tomorrow gets rejected. Sending a local datetime with no zone parses to
-    // local midnight and clears the floor. endDate has no such floor, so it stays
-    // date-only. One-time charges once, so it carries no autopay block at all.
-    const startAt = `${startDate}T00:00:00`;
+    // Send local midnight of the start date with an explicit UTC offset. The
+    // component's local-time floor and the Subscription/add API's UTC "future"
+    // check then read it as the same instant, so a zoneless string can't be
+    // parsed as UTC midnight and rejected as past when it's evening west of UTC.
+    // endDate has no such floor, so it stays date-only. One-time carries no
+    // autopay block at all.
+    const startAt = localMidnightWithOffset(startDate);
     const autopay =
       endMode === "specificDate"
         ? { frequency, startDate: startAt, endDate, untilCancel: false }
