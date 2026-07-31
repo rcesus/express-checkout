@@ -22,6 +22,12 @@ export default function ConsoleLog({ entries }: { entries: LogEntry[] }) {
     <section className="card console">
       <div className="console-head">
         <span className="console-title">Console</span>
+        {/* Decorative window controls. Only the win95 theme shows these. */}
+        <span className="console-controls" aria-hidden="true">
+          <span className="console-control">_</span>
+          <span className="console-control">□</span>
+          <span className="console-control">✕</span>
+        </span>
       </div>
       <div className="console-body">
         {entries.length === 0 ? (

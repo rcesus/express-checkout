@@ -122,6 +122,128 @@
     inset -2px -2px 0 0 #dfdfdf;
 }
 
+/* The console as a Win95 application window: navy title bar with control
+   buttons, gray dialog body, and each log entry a sunken white field. Follows
+   the anatomy of the Themesberg Win95 kit's card component, but keeps this
+   theme's box-shadow bevels instead of the kit's flat borders. */
+:root[data-theme="win95"] .console-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 3px 3px 0;
+  padding: 2px 2px 2px 4px;
+  border-bottom: none;
+  background: linear-gradient(to right, #000080, #1084d0);
+}
+
+:root[data-theme="win95"] .console-title {
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.console-controls {
+  display: none;
+}
+
+:root[data-theme="win95"] .console-controls {
+  display: flex;
+  gap: 2px;
+}
+
+:root[data-theme="win95"] .console-control {
+  width: 16px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #c0c0c0;
+  color: #000000;
+  font-size: 0.6rem;
+  line-height: 1;
+  box-shadow:
+    inset -1px -1px 0 0 #000000,
+    inset 1px 1px 0 0 #ffffff,
+    inset -2px -2px 0 0 #808080,
+    inset 2px 2px 0 0 #dfdfdf;
+}
+
+:root[data-theme="win95"] .console-body {
+  padding: 8px 6px;
+  gap: 6px;
+}
+
+:root[data-theme="win95"] .console-empty {
+  color: #000000;
+}
+
+/* Sunken white fields, the same treatment the inputs get. The kind color rides
+   on the left edge, so that border stays and its color is left to the per-kind
+   rules below rather than reset by a shorthand here. */
+:root[data-theme="win95"] .log {
+  background: #ffffff;
+  color: #000000;
+  border-top: none;
+  border-right: none;
+  border-bottom: none;
+  border-left-width: 3px;
+  border-left-style: solid;
+  box-shadow:
+    inset 1px 1px 0 0 #808080,
+    inset -1px -1px 0 0 #ffffff,
+    inset 2px 2px 0 0 #000000,
+    inset -2px -2px 0 0 #dfdfdf;
+}
+
+:root[data-theme="win95"] .log-detail {
+  padding: 6px 8px;
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid #808080;
+}
+
+:root[data-theme="win95"] .log-tag {
+  background: transparent;
+  padding: 0;
+  font-weight: bold;
+}
+
+:root[data-theme="win95"] .log-label {
+  color: #000000;
+}
+
+/* The note keeps its dashed red frame, but on white like the other fields. */
+:root[data-theme="win95"] .log-note {
+  background: #ffffff;
+  border: 1px dashed var(--danger);
+  border-left: 3px solid var(--danger);
+  box-shadow: none;
+}
+
+/* Chunky gray scrollbar with a raised thumb. */
+:root[data-theme="win95"] .console-body {
+  scrollbar-color: #c0c0c0 #dfdfdf;
+}
+
+:root[data-theme="win95"] .console-body::-webkit-scrollbar {
+  width: 16px;
+}
+
+:root[data-theme="win95"] .console-body::-webkit-scrollbar-track {
+  margin: 0;
+  background: #dfdfdf;
+}
+
+:root[data-theme="win95"] .console-body::-webkit-scrollbar-thumb {
+  border: none;
+  background: #c0c0c0;
+  background-clip: border-box;
+  box-shadow:
+    inset -1px -1px 0 0 #000000,
+    inset 1px 1px 0 0 #ffffff,
+    inset -2px -2px 0 0 #808080,
+    inset 2px 2px 0 0 #dfdfdf;
+}
+
 * {
   box-sizing: border-box;
 }
