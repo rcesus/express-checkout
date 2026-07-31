@@ -122,12 +122,6 @@
   font-weight: bold;
 }
 
-/* Win95 hyperlinks: underlined blue, purple when visited. */
-:root[data-theme="win95"] .link-btn {
-  color: #0000ff;
-  text-decoration: underline;
-}
-
 /* Raised gray buttons; pressed state inverts the bevel. The era's buttons were
    about 23px tall, so they shed the shared padding along with the inputs. */
 :root[data-theme="win95"] .btn {
@@ -265,6 +259,16 @@
   padding: 0 4px;
   background: #c0c0c0;
   color: #000000;
+}
+
+/* Amount and the two date fields sit in the same stack as the Frequency
+   dropdown, so they take its height: the vertical padding and font size the
+   select already has. Named individually rather than as all inputs, because the
+   customer form and the search box keep the app's own sizing (0b80d7e). */
+:root[data-theme="win95"] .amount-input,
+:root[data-theme="win95"] input[type="date"] {
+  padding: 3px 5px;
+  font-size: 0.8rem;
 }
 
 /* Inside the settings modal, text fields take the dropdowns' height: same
@@ -1042,19 +1046,10 @@ h2 {
   color: var(--muted);
 }
 
-.link-btn {
+/* Same gap the Create new customer button keeps above itself, so the button
+   doesn't sit against the email line. */
+.back-to-search {
   margin-top: 10px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--accent);
-  font-size: 0.85rem;
-  font-family: inherit;
-  cursor: pointer;
-}
-
-.link-btn:hover {
-  color: var(--accent-hover);
 }
 
 .customer-form {

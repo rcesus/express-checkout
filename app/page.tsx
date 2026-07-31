@@ -743,7 +743,7 @@ export default function Home() {
                 <p className="customer-line">{selectedCustomer.email}</p>
                 <button
                   type="button"
-                  className="link-btn"
+                  className="btn secondary back-to-search"
                   onClick={clearSelected}
                 >
                   Back to search
@@ -909,6 +909,7 @@ export default function Home() {
             Amount
             <input
               type="text"
+              className="amount-input"
               inputMode="decimal"
               value={amount}
               placeholder={persona.amount.toFixed(2)}
