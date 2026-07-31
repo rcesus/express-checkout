@@ -615,11 +615,17 @@ export default function Home() {
             className="gear"
             aria-label="Switch to Windows 95 mode"
             aria-pressed={theme === "win95"}
-            disabled={active}
+            // One-way in: the sun/moon toggle is what leaves win95, so this
+            // button goes inert once the theme is on.
+            disabled={active || theme === "win95"}
             title={
-              active ? "Theme is locked while the payment component is rendered" : "Windows 95 mode"
+              active
+                ? "Theme is locked while the payment component is rendered"
+                : theme === "win95"
+                  ? "Windows 95 mode is on. Use the light/dark toggle to leave it."
+                  : "Windows 95 mode"
             }
-            onClick={() => applyTheme(theme === "win95" ? "dark" : "win95")}
+            onClick={() => applyTheme("win95")}
           >
             <span className="win95-logo" aria-hidden="true" />
           </button>
