@@ -197,7 +197,7 @@ export interface CheckoutConfig {
 }
 
 export const DEFAULT_CHECKOUT: CheckoutConfig = {
-  paymentMode: "autopay",
+  paymentMode: "one_time",
   applePayEnabled: true,
   applePayCrossBrowser: true,
   applePayButtonStyle: "black",
