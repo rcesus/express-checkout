@@ -12,6 +12,19 @@
   --radius: 12px;
 }
 
+/* Light palette. Dark is the base above; this overrides only when the document
+   carries data-theme="light". Accent and radius are shared, so they stay. */
+:root[data-theme="light"] {
+  --bg: #f6f8fa;
+  --panel: #ffffff;
+  --panel-2: #eef1f5;
+  --border: #d6dde5;
+  --text: #1c2128;
+  --muted: #5a6672;
+  --danger: #d64545;
+  --success: #2fa25a;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -48,6 +61,11 @@ h2 {
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 24px;
+}
+
+.topbar-actions {
+  display: flex;
+  gap: 10px;
 }
 
 .gear {

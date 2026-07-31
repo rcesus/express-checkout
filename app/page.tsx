@@ -19,6 +19,7 @@ import {
 } from "@/lib/personas";
 
 const SETTINGS_KEY = "payabli_paypoint_settings";
+const THEME_KEY = "payabli_theme";
 const SANDBOX_SCRIPT = "https://embedded-component-sandbox.payabli.com/component.js";
 const CONTAINER_ID = "pay-component-1";
 
@@ -71,6 +72,7 @@ export default function Home() {
   });
   const [hasPrivateToken, setHasPrivateToken] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
 
   // Earliest start whose UTC date is strictly after today's UTC date, so the
   // Subscription/add "future" check passes in any timezone (see earliestStartDate).
@@ -141,6 +143,23 @@ export default function Home() {
     const t = window.setTimeout(() => setResult(null), 5000);
     return () => window.clearTimeout(t);
   }, [result]);
+
+  // Restore the saved theme once and reflect it on the document. Dark is the
+  // default, so only light needs the data-theme attribute; dark falls back to
+  // the base :root palette.
+  useEffect(() => {
+    const saved = window.localStorage.getItem(THEME_KEY);
+    const next = saved === "light" ? "light" : "dark";
+    setTheme(next);
+    document.documentElement.setAttribute("data-theme", next);
+  }, []);
+
+  function toggleTheme() {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    document.documentElement.setAttribute("data-theme", next);
+    window.localStorage.setItem(THEME_KEY, next);
+  }
 
   // Load saved paypoint settings and private-token status once.
   useEffect(() => {
@@ -573,13 +592,22 @@ export default function Home() {
 
       <header className="topbar">
         <div />
-        <button
-          className="gear"
-          aria-label="Paypoint settings"
-          onClick={() => setModalOpen(true)}
-        >
-          ⚙
-        </button>
+        <div className="topbar-actions">
+          <button
+            className="gear"
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            onClick={toggleTheme}
+          >
+            {theme === "dark" ? "☀" : "☾"}
+          </button>
+          <button
+            className="gear"
+            aria-label="Paypoint settings"
+            onClick={() => setModalOpen(true)}
+          >
+            ⚙
+          </button>
+        </div>
       </header>
 
       <main className="grid">
