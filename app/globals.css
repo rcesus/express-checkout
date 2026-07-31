@@ -170,10 +170,17 @@
 }
 
 /* Only the dropdowns take the tighter era height. Text inputs keep the app's
-   own padding. */
+   own padding. The arrow is a raised gray button with a dark triangle, drawn as
+   an inline SVG since a native select gives no element to style. */
 :root[data-theme="win95"] select {
-  padding: 3px 5px;
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 3px 22px 3px 5px;
   font-size: 0.8rem;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><rect width='16' height='16' fill='%23c0c0c0'/><path d='M0 0h16v1H0z' fill='%23ffffff'/><path d='M0 0h1v16H0z' fill='%23ffffff'/><path d='M1 1h14v1H1z' fill='%23dfdfdf'/><path d='M1 1h1v14H1z' fill='%23dfdfdf'/><path d='M15 0h1v16h-1z' fill='%23000000'/><path d='M0 15h16v1H0z' fill='%23000000'/><path d='M14 1h1v14h-1z' fill='%23808080'/><path d='M1 14h14v1H1z' fill='%23808080'/><path d='M5 6h6l-3 4z' fill='%23404040'/></svg>") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 2px center !important;
+  background-size: 16px 16px !important;
 }
 
 /* Win95 checkboxes and radios: 13px sunken white wells, a black check glyph or
