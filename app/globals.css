@@ -88,8 +88,13 @@ h2 {
   transition: background 0.15s ease;
 }
 
-.gear:hover {
+.gear:hover:not(:disabled) {
   background: var(--panel-2);
+}
+
+.gear:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .grid {

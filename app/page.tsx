@@ -599,6 +599,10 @@ export default function Home() {
           <button
             className="gear"
             aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            // The iframe's theme is fixed at mount, so lock the toggle while the
+            // component is rendered to avoid a host/iframe theme mismatch.
+            disabled={active}
+            title={active ? "Theme is locked while the payment component is rendered" : undefined}
             onClick={toggleTheme}
           >
             {theme === "dark" ? "☀" : "☾"}
