@@ -242,8 +242,8 @@ export default function Home() {
 
   function selectCustomer(c: Customer) {
     setSelectedCustomer(c);
-    setSearchResults([]);
-    setSearchQuery("");
+    // Keep the query and the result list so "Back to search" returns to the
+    // list this pick came from instead of an empty box.
     setSearchError("");
     setCreating(false);
     markStale();
@@ -687,7 +687,7 @@ export default function Home() {
                   className="link-btn"
                   onClick={clearSelected}
                 >
-                  Change customer
+                  Back to search
                 </button>
               </>
             ) : creating ? (

@@ -237,13 +237,16 @@
   box-shadow: inset 0 1px 0 0 #ffffff;
 }
 
-/* Group box around the customer block: etched frame, no fill. */
+/* The customer block is a sunken white field like the log entries and the
+   component well, not a gray panel. */
 :root[data-theme="win95"] .customer-card {
-  background: transparent;
+  background: #ffffff;
   border: none;
   box-shadow:
     inset 1px 1px 0 0 #808080,
-    inset -1px -1px 0 0 #ffffff;
+    inset -1px -1px 0 0 #ffffff,
+    inset 2px 2px 0 0 #000000,
+    inset -2px -2px 0 0 #dfdfdf;
 }
 
 /* The overlay that hides the component mid-swap matches the white well instead
