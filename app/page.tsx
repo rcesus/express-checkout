@@ -905,6 +905,7 @@ export default function Home() {
             )}
           </div>
 
+          {!creating && (
           <label>
             Amount
             <input
@@ -925,6 +926,7 @@ export default function Home() {
               }}
             />
           </label>
+          )}
 
           {isAutopay && (
             <>
